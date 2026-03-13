@@ -98,7 +98,7 @@ docker compose exec app bash
 
 composer require laravel/sanctum
 composer require spatie/laravel-permission
-
+docker compose exec app bash
 php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
 php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
 
