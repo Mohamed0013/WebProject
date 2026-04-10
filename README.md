@@ -371,3 +371,50 @@ Notes:
 
 - This deploys the React frontend as a static site.
 - The Laravel backend/API cannot run on GitHub Pages and must be hosted separately.
+
+## Backend deployment (Render)
+
+This repository now includes:
+
+- `backend/Dockerfile`
+- `backend/start-container.sh`
+- `.github/workflows/deploy-backend-render.yml`
+
+### 1) Create a Render Web Service
+
+1. In Render, create a new **Web Service** from this repository.
+2. Set **Root Directory** to `backend`.
+3. Render will use the included `backend/Dockerfile`.
+
+### 2) Configure backend environment variables (Render)
+
+Set these values in Render:
+
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `APP_URL=https://<your-render-backend-domain>`
+- `APP_KEY=<generate with: php artisan key:generate --show>`
+- `DB_CONNECTION=mysql` (or `sqlite` if you prefer)
+- `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (for MySQL)
+
+Optional for frontend auth/API access:
+
+- `SANCTUM_STATEFUL_DOMAINS=<your-github-pages-domain>`
+
+### 3) Enable GitHub-triggered backend deploy
+
+Add repository secret:
+
+- `RENDER_DEPLOY_HOOK_URL` (from Render Deploy Hook)
+
+Then pushes to `main` that change `backend/**` trigger:
+
+- `.github/workflows/deploy-backend-render.yml`
+
+### 4) Point frontend to deployed backend API
+
+Add repository variable in GitHub:
+
+- `VITE_API_BASE_URL=https://<your-render-backend-domain>/api`
+
+The frontend Pages workflow reads this variable when building.
