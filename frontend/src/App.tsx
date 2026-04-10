@@ -20,6 +20,7 @@ import PackLuxuryTrioImage from "./pictures/pack3/pack-luxury-trio.png";
 import WantedImage from "./pictures/Wanted.jpeg";
 import YImage from "./pictures/Y.jpeg";
 import SauvageImage from "./pictures/sauvage.jpeg";
+import YouImage from "./pictures/You.jpeg";
 import VersaceErosImage from "./pictures/VersaceEros.jpeg";
 
 type AdminLoginForm = {
@@ -140,6 +141,7 @@ const perfumeImageBySlug: Record<string, string> = {
   "azzaro-wanted": WantedImage,
   "y-eau-de-parfum": YImage,
   "dior-sauvage": SauvageImage,
+  "stronger-with-you": YouImage,
   "versace-eros": VersaceErosImage,
 };
 
