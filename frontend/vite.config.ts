@@ -3,10 +3,12 @@ import react from '@vitejs/plugin-react'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 
 const apiProxyTarget = process.env.VITE_PROXY_TARGET || 'http://nginx'
+const buildBasePath = process.env.VITE_BASE_PATH
+const buildOutDir = process.env.VITE_OUT_DIR || '../backend/public/spa'
 
 export default defineConfig(({ command }) => ({
   // Use root path in dev so http://localhost:5173/ stays on "/".
-  base: command === 'serve' ? '/' : '/spa/',
+  base: command === 'serve' ? '/' : (buildBasePath || '/spa/'),
   plugins: [react(), basicSsl()],
   server: {
     host: true,
@@ -21,7 +23,7 @@ export default defineConfig(({ command }) => ({
     },
   },
   build: {
-    outDir: '../backend/public/spa',
+    outDir: buildOutDir,
     emptyOutDir: true,
     rollupOptions: {
       output: {

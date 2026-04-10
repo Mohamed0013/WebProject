@@ -353,3 +353,21 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <App />
   </React.StrictMode>
 )
+
+## GitHub Pages deployment (frontend)
+
+This repository now includes a workflow at:
+
+- `.github/workflows/deploy-frontend-gh-pages.yml`
+
+How to deploy:
+
+1. Push your code to the `main` branch.
+2. In GitHub, open **Settings → Pages**.
+3. Set **Build and deployment** source to **GitHub Actions**.
+4. The workflow will build `frontend` and publish it to GitHub Pages.
+
+Notes:
+
+- This deploys the React frontend as a static site.
+- The Laravel backend/API cannot run on GitHub Pages and must be hosted separately.
