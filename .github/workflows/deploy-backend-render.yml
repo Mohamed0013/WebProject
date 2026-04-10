@@ -9,6 +9,8 @@ on:
       - ".github/workflows/deploy-backend-render.yml"
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

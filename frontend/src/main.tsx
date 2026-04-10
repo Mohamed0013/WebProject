@@ -4,12 +4,12 @@ import { BrowserRouter, HashRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
-const Router = ((import.meta.env.VITE_ROUTER_MODE as string | undefined) === 'hash' ? HashRouter : BrowserRouter)
+const RouterComponent = ((import.meta.env.VITE_ROUTER_MODE as string | undefined) === 'hash' ? HashRouter : BrowserRouter)
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <Router>
+    <RouterComponent>
       <App />
-    </Router>
+    </RouterComponent>
   </React.StrictMode>
 )
