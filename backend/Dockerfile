@@ -22,6 +22,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 COPY composer.json composer.lock ./
+RUN composer validate --strict --no-check-all
 RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
 COPY . .

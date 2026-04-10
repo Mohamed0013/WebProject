@@ -23,4 +23,4 @@ jobs:
             echo "RENDER_DEPLOY_HOOK_URL is not set."
             exit 1
           fi
-          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
+          curl -fS -X POST "$RENDER_DEPLOY_HOOK_URL"

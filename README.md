@@ -396,6 +396,7 @@ Set these values in Render:
 - `APP_KEY=<generate with: php artisan key:generate --show>`
 - `DB_CONNECTION=mysql` (or `sqlite` if you prefer)
 - `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (for MySQL)
+- `RUN_MIGRATIONS=true` (set to run `php artisan migrate --force` on startup)
 
 Optional for frontend auth/API access:
 
