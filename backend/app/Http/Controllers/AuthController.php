@@ -11,26 +11,9 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|string|in:client,vendor',
-        ]);
-
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role' => $data['role'],
-        ]);
-
-        $token = $user->createToken('api-token')->plainTextToken;
-
         return response()->json([
-            'user' => $this->serializeUser($user),
-            'access_token' => $token,
-        ], 201);
+            'message' => 'Registration is disabled. Only admin login is allowed.',
+        ], 403);
     }
 
     public function login(Request $request)
@@ -45,6 +28,12 @@ class AuthController extends Controller
         if (!$user || !Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        if ($user->role !== 'admin') {
+            throw ValidationException::withMessages([
+                'email' => ['Only admin accounts can log in.'],
             ]);
         }
 

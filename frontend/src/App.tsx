@@ -1,291 +1,1815 @@
-import { useEffect, useState, type FormEvent } from "react";
 import { isAxiosError } from "axios";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import api from "./api";
-import type { User } from "./types";
+import type { AdminOrder, OrderResponse, Perfume, User } from "./types";
+import APLogo from "./pictures/AP.png";
+import BlueImage from "./pictures/Blue.jpeg";
+import BossImage from "./pictures/Boss.jpeg";
+import ErbaPuraImage from "./pictures/ErbaPura.jpeg";
+import GioImage from "./pictures/Gio.jpeg";
+import ImaginationImage from "./pictures/Imagination.jpeg";
+import InvictusImage from "./pictures/Invectus.jpeg";
+import LHommeImage from "./pictures/LHOME.jpeg";
+import LightBlueImage from "./pictures/LightBlue.jpeg";
+import PackBlackMarbleImage from "./pictures/pack3/pack-black-marble.png";
+import PackDarkSignatureImage from "./pictures/pack3/pack-dark-signature.png";
+import PackEliteHarmonyImage from "./pictures/pack3/pack-elite-harmony.png";
+import PackHarmonieImage from "./pictures/pack3/pack-harmonie.png";
+import PackLuxuryTrioImage from "./pictures/pack3/pack-luxury-trio.png";
+import WantedImage from "./pictures/Wanted.jpeg";
+import YImage from "./pictures/Y.jpeg";
+import SauvageImage from "./pictures/sauvage.jpeg";
+import VersaceErosImage from "./pictures/VersaceEros.jpeg";
 
-type AuthMode = "login" | "register";
-
-type AuthState = {
-  name: string;
+type AdminLoginForm = {
   email: string;
   password: string;
-  passwordConfirmation: string;
-  role: "client" | "vendor";
 };
 
-type UserRole = User["role"];
-
-const tokenStorageKey = "house-market-token";
-
-const rolePaths: Record<UserRole, string> = {
-  admin: "/admin",
-  vendor: "/vendor",
-  client: "/client",
+type GuestOrderForm = {
+  customer_name: string;
+  customer_address: string;
+  customer_phone: string;
+  quantity: number;
+  purchase_option: PurchaseOption;
 };
 
-const roleScreens: Record<UserRole, {
-  eyebrow: string;
-  title: string;
-  subtitle: string;
-  accentClass: string;
-  panelClass: string;
-  highlights: Array<{ label: string; value: string }>;
-  actions: string[];
-}> = {
-  admin: {
-    eyebrow: "Platform Control",
-    title: "Admin Command Center",
-    subtitle: "Oversee user access, marketplace health, and operational priorities from one place.",
-    accentClass: "from-slate-900 via-slate-800 to-emerald-700",
-    panelClass: "bg-slate-900 text-white",
-    highlights: [
-      { label: "Access", value: "Full permissions" },
-      { label: "Focus", value: "Users, listings, policy" },
-      { label: "Priority", value: "Keep the platform stable" },
-    ],
-    actions: ["Review new vendor accounts", "Monitor marketplace activity", "Adjust platform settings"],
-  },
-  vendor: {
-    eyebrow: "Sales Workspace",
-    title: "Vendor Operations",
-    subtitle: "Manage inventory, respond to demand, and keep listings performing.",
-    accentClass: "from-emerald-700 via-emerald-600 to-amber-400",
-    panelClass: "bg-emerald-600 text-white",
-    highlights: [
-      { label: "Access", value: "Vendor tools" },
-      { label: "Focus", value: "Listings and conversions" },
-      { label: "Priority", value: "Keep stock market-ready" },
-    ],
-    actions: ["Publish new listings", "Track buyer interest", "Update inventory status"],
-  },
-  client: {
-    eyebrow: "Buyer Space",
-    title: "Client Dashboard",
-    subtitle: "Track saved properties, compare options, and move deals forward.",
-    accentClass: "from-amber-400 via-orange-300 to-slate-900",
-    panelClass: "bg-amber-100 text-amber-950",
-    highlights: [
-      { label: "Access", value: "Client tools" },
-      { label: "Focus", value: "Saved homes and requests" },
-      { label: "Priority", value: "Find the right match" },
-    ],
-    actions: ["Review saved listings", "Compare offers", "Send new inquiries"],
-  },
+const tokenStorageKey = "perfume-admin-token";
+const languageStorageKey = "perfume-language";
+
+type Language = "fr" | "ar";
+
+type PurchaseOption = "single_30ml" | "single_60ml" | "pack_30ml_x4" | "pack_50ml_x3";
+
+type CartItem = {
+  key: string;
+  perfumeId: number;
+  perfumeName: string;
+  perfumeSlug: string;
+  routePath?: string;
+  imageUrl: string | null;
+  purchaseOption: PurchaseOption;
+  quantity: number;
+  unitPrice: number;
 };
 
-function RoleDashboard({ user, onLogout }: { user: User; onLogout: () => Promise<void> }) {
-  const screen = roleScreens[user.role];
+const purchaseOptionLabels: Record<PurchaseOption, { fr: string; ar: string }> = {
+  single_30ml: { fr: "30ml (1 bouteille)", ar: "30 مل (زجاجة واحدة)" },
+  single_60ml: { fr: "60ml (1 bouteille)", ar: "60 مل (زجاجة واحدة)" },
+  pack_30ml_x4: { fr: "Pack 30ml x4 (150 DH)", ar: "باك 30 مل × 4 (150 درهم)" },
+  pack_50ml_x3: { fr: "Pack 50ml x3 (180 DH)", ar: "باك 50 مل × 3 (180 درهم)" },
+};
+
+const ingredientArabicMap: Record<string, string> = {
+  lemon: "ليمون",
+  bergamot: "برغموت",
+  citrus: "حمضيات",
+  mandarin: "يوسفي",
+  orange: "برتقال",
+  grapefruit: "جريب فروت",
+  mint: "نعناع",
+  pepper: "فلفل",
+  cardamom: "هيل",
+  saffron: "زعفران",
+  rose: "ورد",
+  peony: "فاوانيا",
+  violet: "بنفسج",
+  floral: "زهري",
+  lavender: "خزامى",
+  tea: "شاي",
+  sage: "ميرمية",
+  vanilla: "فانيلا",
+  tonka: "تونكا",
+  bean: "حبوب",
+  amber: "عنبر",
+  musk: "مسك",
+  sandalwood: "خشب الصندل",
+  cedar: "أرز",
+  wood: "خشب",
+  patchouli: "باتشولي",
+  vetiver: "فيتيفر",
+  oud: "عود",
+  incense: "بخور",
+  resin: "راتنج",
+  leather: "جلد",
+  pear: "كمثرى",
+  lychee: "ليتشي",
+  fruit: "فاكهة",
+  jasmine: "ياسمين",
+  iris: "سوسن",
+  neroli: "نيرولي",
+  almond: "لوز",
+  coconut: "جوز الهند",
+  cherry: "كرز",
+  plum: "برقوق",
+  apple: "تفاح",
+  pineapple: "أناناس",
+  fig: "تين",
+  raspberry: "توت العليق",
+  strawberry: "فراولة",
+  blackcurrant: "كشمش أسود",
+  cinnamon: "قرفة",
+  clove: "قرنفل",
+  ginger: "زنجبيل",
+  tobacco: "تبغ",
+  cacao: "كاكاو",
+  chocolate: "شوكولاتة",
+  caramel: "كراميل",
+  honey: "عسل",
+  rum: "روم",
+  whiskey: "ويسكي",
+  moss: "طحلب",
+  oakmoss: "طحلب السنديان",
+  aldehydes: "ألدهيدات",
+  aquatic: "مائي",
+  salty: "ملحي",
+};
+
+const perfumeImageBySlug: Record<string, string> = {
+  "acqua-di-gio": GioImage,
+  "acqua-di-gio-homme": GioImage,
+  "blue-seduction": BlueImage,
+  "blue-seduction-men": BlueImage,
+  "boss-bottled": BossImage,
+  "dolce-gabbana-light-blue": LightBlueImage,
+  "erba-pura": ErbaPuraImage,
+  imagination: ImaginationImage,
+  invictus: InvictusImage,
+  "l-homme-ysl": LHommeImage,
+  "azzaro-wanted": WantedImage,
+  "y-eau-de-parfum": YImage,
+  "dior-sauvage": SauvageImage,
+  "versace-eros": VersaceErosImage,
+};
+
+const homeFeaturedSlugs = [
+  "erba-pura",
+  "imagination",
+  "dolce-gabbana-light-blue",
+  "versace-eros",
+];
+
+type PackShowcaseItem = {
+  id: string;
+  image: string;
+  perfumeSlug: string;
+  purchaseOption: PurchaseOption;
+  includedSlugs: string[];
+  titleFr: string;
+  titleAr: string;
+  descriptionFr: string;
+  descriptionAr: string;
+  detailsFr: string;
+  detailsAr: string;
+  price: number;
+};
+
+const packShowcaseItems: PackShowcaseItem[] = [
+  {
+    id: "pack-signature-3x50",
+    image: PackDarkSignatureImage,
+    perfumeSlug: "versace-eros",
+    purchaseOption: "pack_50ml_x3",
+    includedSlugs: ["versace-eros", "dior-sauvage", "imagination"],
+    titleFr: "Pack Signature 3x50ml",
+    titleAr: "باك سيغنيتشر 3×50مل",
+    descriptionFr: "Selection orientale boisee pour la soiree, projection forte et tenue durable.",
+    descriptionAr: "تشكيلة شرقية خشبية للمساء، فوحان قوي وثبات ممتاز.",
+    detailsFr: "Ce pack reunit trois parfums puissants pour les sorties et les occasions: style charismatique, bonne diffusion et tenue stable au fil des heures.",
+    detailsAr: "هذا الباك يجمع ثلاثة عطور قوية للخروجات والمناسبات: طابع كاريزمي، فوحان واضح وثبات جيد لساعات.",
+    price: 180,
+  },
+  {
+    id: "pack-fresh-3x50",
+    image: PackLuxuryTrioImage,
+    perfumeSlug: "acqua-di-gio",
+    purchaseOption: "pack_50ml_x3",
+    includedSlugs: ["acqua-di-gio", "blue-seduction", "dolce-gabbana-light-blue"],
+    titleFr: "Pack Fresh 3x50ml",
+    titleAr: "باك فريش 3×50مل",
+    descriptionFr: "Trois profils frais et propres pour la journee et le quotidien.",
+    descriptionAr: "ثلاث روائح منعشة ونظيفة للنهار والاستخدام اليومي.",
+    detailsFr: "Un pack ideal pour la chaleur et le quotidien: accords marins, citrus et aromatiques pour rester propre et elegant toute la journee.",
+    detailsAr: "باك مثالي للأجواء الحارة والاستعمال اليومي: نغمات بحرية وحمضية وعطرية لإحساس نظيف وأنيق طوال اليوم.",
+    price: 180,
+  },
+  {
+    id: "pack-elite-3x50",
+    image: PackEliteHarmonyImage,
+    perfumeSlug: "imagination",
+    purchaseOption: "pack_50ml_x3",
+    includedSlugs: ["imagination", "erba-pura", "y-eau-de-parfum"],
+    titleFr: "Pack Elite 3x50ml",
+    titleAr: "باك إيليت 3×50مل",
+    descriptionFr: "Compositions haut de gamme inspirees des best-sellers internationaux.",
+    descriptionAr: "تركيبات عالية الجودة مستوحاة من أكثر العطور العالمية مبيعا.",
+    detailsFr: "Selection premium pour clients exigeants: profils modernes et luxueux, parfaits pour une image haut de gamme au quotidien et en soiree.",
+    detailsAr: "تشكيلة بريميوم للزبناء الباحثين عن الجودة: روائح عصرية وفاخرة مناسبة للصورة الراقية يوميا وفي المساء.",
+    price: 180,
+  },
+  {
+    id: "pack-harmonie-4x30",
+    image: PackHarmonieImage,
+    perfumeSlug: "erba-pura",
+    purchaseOption: "pack_50ml_x3",
+    includedSlugs: ["erba-pura", "boss-bottled", "invictus"],
+    titleFr: "Pack Harmonie 3x50ml",
+    titleAr: "باك هارموني 3×50مل",
+    descriptionFr: "Trois parfums polyvalents pour varier entre bureau, sorties et weekend.",
+    descriptionAr: "ثلاث عطور متعددة الاستعمال بين المكتب والخروجات وعطلة نهاية الأسبوع.",
+    detailsFr: "Le meilleur choix pour tester plusieurs styles dans un seul achat: 3 parfums en format 50ml pour alterner facilement selon votre programme.",
+    detailsAr: "أفضل خيار لتجربة أكثر من ستايل بعطـر واحد: 3 عطور بحجم 50مل لتغيير الرائحة بسهولة حسب برنامجك اليومي.",
+    price: 180,
+  },
+  {
+    id: "pack-black-marble-4x30",
+    image: PackBlackMarbleImage,
+    perfumeSlug: "dior-sauvage",
+    purchaseOption: "pack_50ml_x3",
+    includedSlugs: ["dior-sauvage", "versace-eros", "l-homme-ysl"],
+    titleFr: "Pack Black Marble 3x50ml",
+    titleAr: "باك بلاك ماربل 3×50مل",
+    descriptionFr: "Pack premium a caractere intense, ideal pour amateurs de parfums puissants.",
+    descriptionAr: "باك بريميوم بطابع قوي، مثالي لمحبي العطور الثقيلة والفواحة.",
+    detailsFr: "Pack a caractere fort et masculin: parfait pour ceux qui aiment une empreinte olfactive remarquee avec une bonne tenue.",
+    detailsAr: "باك بطابع قوي ورجولي: مناسب لمحبي العطور ذات الحضور الواضح والثبات الجيد.",
+    price: 180,
+  },
+];
+
+function resolvePerfumeImage(perfume: Pick<Perfume, "slug" | "image_url">) {
+  return perfumeImageBySlug[perfume.slug] ?? perfume.image_url;
+}
+
+function splitBilingualText(value: string) {
+  const parts = value.split("||").map((part) => part.trim());
+  if (parts.length < 2) {
+    return null;
+  }
+
+  return {
+    fr: parts[0],
+    ar: parts.slice(1).join(" || "),
+  };
+}
+
+function localizePerfumeText(value: string, isArabic: boolean) {
+  const bilingual = splitBilingualText(value);
+  if (!bilingual) {
+    return value;
+  }
+
+  return isArabic ? bilingual.ar : bilingual.fr;
+}
+
+function translateIngredientToArabic(ingredient: string) {
+  return ingredient
+    .split(/([,()\-\/]|\s+)/)
+    .map((part) => {
+      const key = part.toLowerCase().trim();
+      if (!key) {
+        return part;
+      }
+
+      return ingredientArabicMap[key] ?? part;
+    })
+    .join("");
+}
+
+function localizePerfumeNote(note: string, isArabic: boolean) {
+  const bilingual = splitBilingualText(note);
+  if (bilingual) {
+    return isArabic ? bilingual.ar : bilingual.fr;
+  }
+
+  return isArabic ? translateIngredientToArabic(note) : note;
+}
+
+function masterQualityLabel(t: (english: string, arabic: string) => string) {
+  return t("Master qualite", "جودة ماستر");
+}
+
+function masterQualityDisclaimer(t: (english: string, arabic: string) => string) {
+  return t(
+    "Master qualite: parfum inspire de tres haute qualite (non original).",
+    "جودة ماستر: عطر مستوحى بجودة عالية جدا (غير أصلي).",
+  );
+}
+
+type LanguageContextValue = {
+  language: Language;
+  setLanguage: (language: Language) => void;
+  isArabic: boolean;
+  t: (english: string, arabic: string) => string;
+};
+
+const LanguageContext = createContext<LanguageContextValue>({
+  language: "fr",
+  setLanguage: () => undefined,
+  isArabic: false,
+  t: (english) => english,
+});
+
+function useLanguage() {
+  return useContext(LanguageContext);
+}
+
+function Currency({ amount }: { amount: number }) {
+  const { language } = useLanguage();
+  const locale = language === "ar" ? "ar-MA" : "fr-MA";
+
+  return <>{new Intl.NumberFormat(locale, { style: "currency", currency: "MAD" }).format(amount)}</>;
+}
+
+type StorefrontPageMode = "home" | "parfumes" | "offres" | "marques" | "packs";
+
+type StorefrontPageProps = {
+  mode: StorefrontPageMode;
+  cartItems: CartItem[];
+  isCartOpen: boolean;
+  setIsCartOpen: (value: boolean) => void;
+  isMenuOpen: boolean;
+  setIsMenuOpen: (value: boolean) => void;
+  hideEmptyCartPrompt: boolean;
+  setHideEmptyCartPrompt: (value: boolean) => void;
+};
+
+function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen, setIsMenuOpen, hideEmptyCartPrompt, setHideEmptyCartPrompt }: StorefrontPageProps) {
+  const { t, language, setLanguage } = useLanguage();
+  const location = useLocation();
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [perfumes, setPerfumes] = useState<Perfume[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+
+  useEffect(() => {
+    const state = location.state as { successMessage?: string } | null;
+    if (!state?.successMessage) {
+      return;
+    }
+
+    setSuccessMessage(state.successMessage);
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+  }, [location.state]);
+
+  useEffect(() => {
+    void api.get<Perfume[]>("/perfumes")
+      .then((response) => setPerfumes(response.data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredPerfumes = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return perfumes.filter((perfume) => {
+      const searchable = [perfume.name, perfume.brand, perfume.short_description, perfume.fragrance_family].join(" ").toLowerCase();
+      const matchesSearch = normalizedSearch.length === 0 || searchable.includes(normalizedSearch);
+      const matchesBrand = selectedBrand.length === 0 || perfume.brand === selectedBrand;
+      return matchesSearch && matchesBrand;
+    });
+  }, [perfumes, searchTerm, selectedBrand]);
+
+  const offerPerfumes = useMemo(
+    () => filteredPerfumes.filter((perfume) => perfume.discount_percentage > 0 || perfume.is_best_seller || perfume.is_trending),
+    [filteredPerfumes],
+  );
+  const offerTickerMessages = useMemo(() => {
+    const defaults = [
+      t("Pack 4 parfums 30ml a 150 DH", "باك 4 عطور 30مل بـ 150 درهم"),
+      t("Pack 3 parfums 50ml a 180 DH", "باك 3 عطور 50مل بـ 180 درهم"),
+      t("Livraison rapide partout au Maroc", "توصيل سريع في كل المغرب"),
+    ];
+
+    const dynamicOffers = offerPerfumes
+      .slice(0, 8)
+      .map((perfume) => {
+        if (perfume.discount_percentage > 0) {
+          return t(
+            `${perfume.name}: -${perfume.discount_percentage}% aujourd'hui`,
+            `${perfume.name}: خصم ${perfume.discount_percentage}% اليوم`,
+          );
+        }
+
+        if (perfume.is_best_seller) {
+          return t(`Best seller: ${perfume.name}`, `الأكثر مبيعاً: ${perfume.name}`);
+        }
+
+        return t(`Tendance: ${perfume.name}`, `رائج الآن: ${perfume.name}`);
+      });
+
+    return dynamicOffers.length > 0 ? dynamicOffers : defaults;
+  }, [offerPerfumes, t]);
+  const [activeOfferIndex, setActiveOfferIndex] = useState(0);
+
+  const brands = useMemo(() => Array.from(new Set(perfumes.map((perfume) => perfume.brand))).sort((a, b) => a.localeCompare(b)), [perfumes]);
+
+  useEffect(() => {
+    setActiveOfferIndex(0);
+  }, [offerTickerMessages.length]);
+
+  useEffect(() => {
+    if (offerTickerMessages.length <= 1) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setActiveOfferIndex((current) => (current + 1) % offerTickerMessages.length);
+    }, 3200);
+
+    return () => window.clearInterval(interval);
+  }, [offerTickerMessages.length]);
+
+  const visiblePerfumes = useMemo(() => {
+    const source = mode === "offres" ? offerPerfumes : filteredPerfumes;
+    if (mode !== "home") {
+      return source;
+    }
+
+    const featured = source.filter((perfume) => homeFeaturedSlugs.includes(perfume.slug));
+    const featuredSlugSet = new Set(featured.map((perfume) => perfume.slug));
+    const rest = source.filter((perfume) => !featuredSlugSet.has(perfume.slug));
+
+    featured.sort((a, b) => homeFeaturedSlugs.indexOf(a.slug) - homeFeaturedSlugs.indexOf(b.slug));
+
+    return [...featured, ...rest];
+  }, [mode, offerPerfumes, filteredPerfumes]);
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  const headingByMode: Record<StorefrontPageMode, string> = {
+    home: t("Nos parfums", "عطورنا"),
+    parfumes: t("Collection parfums", "مجموعة العطور"),
+    offres: t("Offres speciales", "العروض الخاصة"),
+    marques: t("Marques", "الماركات"),
+    packs: t("Nos Packs", "باقاتنا"),
+  };
+  const offersQualityHeader = t(
+    "Nous nous distinguons par la conception de parfums de haute qualite en utilisant des huiles parfumees concentrees et originales. Puissance, projection et tenue de plus de quatre heures.",
+    "نتميز عن غيرنا بتصميم عطور بجودة عالية عن طريق استعمال زيوت عطرية مركزة وأصلية. قوة, فوحان, ثبات يدوم لأكثر من أربع ساعات",
+  );
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff8e8,_#f1f5f9_55%,_#dbe4f0)] px-6 py-10">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className={`overflow-hidden rounded-[2rem] bg-gradient-to-br ${screen.accentClass} p-8 text-left shadow-2xl`}>
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-2xl text-white">
-              <p className="text-xs uppercase tracking-[0.35em] text-white/70">{screen.eyebrow}</p>
-              <h1 className="mt-4 text-4xl font-semibold tracking-tight">{screen.title}</h1>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-white/80">{screen.subtitle}</p>
-            </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff2d5_0%,_#fef3e2_32%,_#f5f5f4_100%)] px-3 pb-8 pt-3 text-stone-900 dark:bg-[radial-gradient(circle_at_top,_#1f2937_0%,_#111827_45%,_#020617_100%)] dark:text-stone-100 sm:px-6 sm:pt-4">
+      <div className="mx-auto max-w-7xl">
+        <div className="rounded-full border border-amber-200 bg-amber-100/90 px-4 py-2 text-center text-[11px] font-semibold tracking-[0.08em] text-amber-950 shadow-sm dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
+          <span className="mr-2 inline-block rounded-full bg-amber-200 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-amber-900 dark:bg-amber-700/70 dark:text-amber-100">{t("Offres", "العروض")}</span>
+          <span key={`${activeOfferIndex}-${offerTickerMessages[activeOfferIndex]}`} className="inline-block min-h-[1.2em] align-middle">
+            {offerTickerMessages[activeOfferIndex]}
+          </span>
+        </div>
+        <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-[11px] font-medium leading-6 text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">
+          {offersQualityHeader}
+        </p>
 
-            <div className="rounded-[1.5rem] border border-white/20 bg-white/10 p-5 text-white backdrop-blur">
-              <p className="text-xs uppercase tracking-[0.3em] text-white/60">Authenticated As</p>
-              <p className="mt-3 text-2xl font-semibold">{user.name}</p>
-              <p className="mt-1 text-sm text-white/75">{user.email}</p>
-              <p className="mt-4 inline-flex rounded-full border border-white/20 px-3 py-1 text-xs uppercase tracking-[0.25em] text-white/85">
-                {user.role}
-              </p>
+        <div className="mt-3 rounded-2xl border border-stone-200 bg-white/95 p-3 shadow-lg dark:border-stone-700 dark:bg-stone-900/95">
+          <div className="flex items-center justify-between gap-3">
+            <Link to="/" className="inline-flex items-center">
+              <img src={APLogo} alt="AP" className="h-11 w-auto" />
+            </Link>
+
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-0.5 rounded-full border border-stone-300 bg-white p-0.5 text-[10px] font-semibold text-stone-800">
+                <button
+                  type="button"
+                  onClick={() => setLanguage("fr")}
+                  className={`rounded-full px-2 py-0.5 transition ${language === "fr" ? "bg-stone-900 text-white" : "text-stone-700"}`}
+                  aria-pressed={language === "fr"}
+                >
+                  FR
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage("ar")}
+                  className={`rounded-full px-2 py-0.5 transition ${language === "ar" ? "bg-stone-900 text-white" : "text-stone-700"}`}
+                  aria-pressed={language === "ar"}
+                >
+                  AR
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCartOpen(true);
+                  setIsMenuOpen(false);
+                }}
+                className="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-800 dark:border-stone-600 dark:text-stone-100"
+              >
+                {t("Panier", "السلة")}
+                <span className="rounded-full bg-stone-900 px-2 py-0.5 text-[10px] text-white dark:bg-stone-100 dark:text-stone-900">{cartCount}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(!isMenuOpen);
+                  setIsCartOpen(false);
+                }}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 text-stone-800 dark:border-stone-600 dark:text-stone-100"
+                aria-label={t("Ouvrir le menu", "فتح القائمة")}
+              >
+                <svg viewBox="0 0 20 20" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+                  <path d="M3 5h14v2H3V5Zm0 4h14v2H3V9Zm0 4h14v2H3v-2Z" />
+                </svg>
+              </button>
             </div>
           </div>
+
+          {isMenuOpen && (
+            <div className="mt-3 rounded-2xl border border-stone-200 bg-gradient-to-br from-amber-50 via-white to-stone-50 p-2.5 text-sm shadow-md dark:border-stone-700 dark:from-stone-800 dark:via-stone-900 dark:to-stone-800">
+              <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Navigation rapide", "تنقل سريع")}</p>
+              <Link to="/parfumes" onClick={() => setIsMenuOpen(false)} className="mb-1 block rounded-xl border border-transparent px-3 py-2.5 font-medium transition hover:border-amber-200 hover:bg-white hover:shadow-sm dark:hover:border-stone-600 dark:hover:bg-stone-700">{t("Parfumes", "العطور")}</Link>
+              <Link to="/offres" onClick={() => setIsMenuOpen(false)} className="mb-1 block rounded-xl border border-transparent px-3 py-2.5 font-medium transition hover:border-amber-200 hover:bg-white hover:shadow-sm dark:hover:border-stone-600 dark:hover:bg-stone-700">{t("Offres", "العروض")}</Link>
+              <Link to="/packs" onClick={() => setIsMenuOpen(false)} className="mb-1 block rounded-xl border border-transparent px-3 py-2.5 font-medium transition hover:border-amber-200 hover:bg-white hover:shadow-sm dark:hover:border-stone-600 dark:hover:bg-stone-700">{t("Packs", "الباكات")}</Link>
+              <Link to="/marques" onClick={() => setIsMenuOpen(false)} className="block rounded-xl border border-transparent px-3 py-2.5 font-medium transition hover:border-amber-200 hover:bg-white hover:shadow-sm dark:hover:border-stone-600 dark:hover:bg-stone-700">{t("Marques", "الماركات")}</Link>
+            </div>
+          )}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
-          <div className="grid gap-4 md:grid-cols-3">
-            {screen.highlights.map((item) => (
-              <div key={item.label} className={`rounded-[1.5rem] p-5 shadow-lg ${screen.panelClass}`}>
-                <p className="text-xs uppercase tracking-[0.25em] opacity-70">{item.label}</p>
-                <p className="mt-4 text-2xl font-semibold">{item.value}</p>
+        {isCartOpen && (
+          <div className="fixed inset-0 z-50 bg-black/35 p-3" onClick={() => setIsCartOpen(false)}>
+            <div className="ml-auto h-full w-full max-w-sm rounded-2xl bg-white p-4 shadow-2xl dark:bg-stone-900" onClick={(event) => event.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold uppercase tracking-[0.15em] text-stone-600 dark:text-stone-300">{t("Votre panier", "سلة المشتريات")}</p>
+                <button
+                  type="button"
+                  onClick={() => setIsCartOpen(false)}
+                  className="rounded-full border border-stone-300 px-2 py-1 text-xs dark:border-stone-600"
+                >
+                  X
+                </button>
+              </div>
+
+              {cartItems.length === 0 ? (
+                !hideEmptyCartPrompt ? (
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    <div className="flex items-start justify-between gap-2">
+                      <p>{t("Votre panier est vide", "سلتك فارغة")}</p>
+                      <button
+                        type="button"
+                        onClick={() => setHideEmptyCartPrompt(true)}
+                        className="rounded-full border border-amber-300 px-2 py-0.5 text-xs"
+                      >
+                        X
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-stone-500 dark:text-stone-300">{t("Aucun article ajoute.", "لا توجد عناصر مضافة.")}</p>
+                )
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {cartItems.map((item) => (
+                    <Link
+                      key={item.key}
+                      to={item.routePath ?? `/perfume/${item.perfumeSlug}`}
+                      onClick={() => {
+                        setIsCartOpen(false);
+                        setIsMenuOpen(false);
+                      }}
+                      className="block rounded-xl border border-stone-200 p-3 text-sm transition hover:border-amber-300 hover:bg-amber-50/40 dark:border-stone-700 dark:hover:border-amber-600 dark:hover:bg-stone-800"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold">{item.perfumeName}</p>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-700 dark:text-amber-300">{t("Voir", "عرض")}</span>
+                      </div>
+                      <p className="text-xs text-stone-600 dark:text-stone-300">{t(purchaseOptionLabels[item.purchaseOption].fr, purchaseOptionLabels[item.purchaseOption].ar)}</p>
+                      <p className="text-xs text-stone-600 dark:text-stone-300">{t("Quantite", "الكمية")}: {item.quantity}</p>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-3 rounded-2xl border border-stone-200 bg-white/90 p-3 shadow-sm dark:border-stone-700 dark:bg-stone-900/90">
+          <input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder={t("Rechercher un parfum, marque, note...", "ابحث عن عطر أو ماركة أو نغمة...")}
+            className="w-full rounded-xl border border-stone-300 p-3 text-sm dark:border-stone-600 dark:bg-stone-800"
+          />
+        </div>
+
+        {mode === "marques" && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedBrand("")}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${selectedBrand.length === 0 ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900" : "border border-stone-300 bg-white dark:border-stone-600 dark:bg-stone-900"}`}
+            >
+              {t("Toutes", "الكل")}
+            </button>
+            {brands.map((brand) => (
+              <button
+                key={brand}
+                type="button"
+                onClick={() => setSelectedBrand(brand)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${selectedBrand === brand ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900" : "border border-stone-300 bg-white dark:border-stone-600 dark:bg-stone-900"}`}
+              >
+                {brand}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {mode !== "packs" && (
+        <section className="mt-4">
+          <h1 className="mb-3 text-xl font-semibold sm:text-2xl">{headingByMode[mode]}</h1>
+          {mode === "offres" && (
+            <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium leading-6 text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">
+              {offersQualityHeader}
+            </p>
+          )}
+
+          {successMessage && (
+            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              {successMessage}
+            </div>
+          )}
+
+          {loading ? (
+            <p className="rounded-2xl bg-white p-5 shadow dark:bg-stone-900">{t("Chargement des parfums...", "جاري تحميل العطور...")}</p>
+          ) : visiblePerfumes.length === 0 ? (
+            <p className="rounded-2xl bg-white p-5 text-sm text-stone-600 shadow dark:bg-stone-900 dark:text-stone-300">{t("Aucun parfum trouve.", "لم يتم العثور على عطور.")}</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+              {visiblePerfumes.map((perfume) => (
+                <Link
+                  key={perfume.id}
+                  to={`/perfume/${perfume.slug}`}
+                  className="group relative block overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-stone-700 dark:bg-stone-900"
+                >
+                  {perfume.discount_percentage > 0 && (
+                    <span className="absolute left-2 top-2 z-10 rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow">-{perfume.discount_percentage}%</span>
+                  )}
+                  <div className="aspect-[4/3] overflow-hidden bg-stone-200 dark:bg-stone-800">
+                    {resolvePerfumeImage(perfume) ? (
+                      <img src={resolvePerfumeImage(perfume) ?? ""} alt={perfume.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs text-stone-500">{t("Pas d'image", "لا توجد صورة")}</div>
+                    )}
+                  </div>
+                  <div className="space-y-2 p-3">
+                    <p className="line-clamp-2 text-sm font-semibold leading-snug sm:text-base">{perfume.name}</p>
+                    <p className="text-xs text-stone-500 dark:text-stone-300">{localizePerfumeText(perfume.brand, language === "ar")}</p>
+                    <p className="inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-800">
+                      {masterQualityLabel(t)}
+                    </p>
+                    <p className="text-xs font-semibold text-amber-800"><Currency amount={perfume.price} /></p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+        )}
+
+        {(mode === "home" || mode === "parfumes" || mode === "packs") && (
+          <section className="mt-6">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold sm:text-xl">{t("Nos Packs", "باقاتنا")}</h2>
+              <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-800">
+                {t("Offres pack", "عروض الباك")}
+              </span>
+            </div>
+            <p className="mb-4 text-xs text-stone-600 dark:text-stone-300">
+              {t("Choisissez un pack pret a commander avec des prix fixes et avantageux.", "اختر باكا جاهزا للطلب بأسعار ثابتة ومميزة.")}
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {packShowcaseItems.map((pack) => (
+                <Link
+                  key={pack.id}
+                  to={`/pack/${pack.id}`}
+                  className="block overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-stone-700 dark:bg-stone-900"
+                >
+                  <div className="aspect-[4/3] overflow-hidden bg-stone-200 dark:bg-stone-800">
+                    <img src={pack.image} alt={t(pack.titleFr, pack.titleAr)} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="space-y-2 p-3">
+                    <p className="text-sm font-semibold leading-snug">{t(pack.titleFr, pack.titleAr)}</p>
+                    <p className="text-xs text-stone-600 dark:text-stone-300">{t(pack.descriptionFr, pack.descriptionAr)}</p>
+                    <p className="text-xs font-semibold text-amber-800"><Currency amount={pack.price} /></p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void }) {
+  const { t, isArabic } = useLanguage();
+  const navigate = useNavigate();
+  const { packId = "" } = useParams();
+  const [catalog, setCatalog] = useState<Perfume[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [quantity, setQuantity] = useState(1);
+  const [message, setMessage] = useState("");
+
+  const pack = useMemo(() => packShowcaseItems.find((item) => item.id === packId) ?? null, [packId]);
+
+  useEffect(() => {
+    void api.get<Perfume[]>("/perfumes")
+      .then((response) => setCatalog(response.data))
+      .catch(() => setCatalog([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const includedPerfumes = useMemo(() => {
+    if (!pack) {
+      return [];
+    }
+
+    return pack.includedSlugs
+      .map((slug) => catalog.find((perfume) => perfume.slug === slug))
+      .filter((perfume): perfume is Perfume => perfume !== undefined);
+  }, [catalog, pack]);
+
+  const representativePerfume = useMemo(() => {
+    if (!pack) {
+      return null;
+    }
+
+    return includedPerfumes.find((perfume) => perfume.slug === pack.perfumeSlug) ?? includedPerfumes[0] ?? null;
+  }, [includedPerfumes, pack]);
+
+  const unitPrice = pack?.price ?? 0;
+  const total = unitPrice * quantity;
+
+  const handleAddPackToCart = () => {
+    if (!pack) {
+      return;
+    }
+
+    onAddToCart({
+      key: `pack-${pack.id}`,
+      perfumeId: representativePerfume?.id ?? 0,
+      perfumeName: t(pack.titleFr, pack.titleAr),
+      perfumeSlug: representativePerfume?.slug ?? pack.perfumeSlug,
+      routePath: `/pack/${pack.id}`,
+      imageUrl: pack.image,
+      purchaseOption: pack.purchaseOption,
+      quantity,
+      unitPrice,
+    });
+
+    setMessage(t("Pack ajoute au panier.", "تمت إضافة الباك إلى السلة."));
+  };
+
+  const handleBuyNow = () => {
+    if (!pack) {
+      return;
+    }
+
+    navigate(`/perfume/${representativePerfume?.slug ?? pack.perfumeSlug}`, {
+      state: {
+        preselectedPurchaseOption: pack.purchaseOption,
+      },
+    });
+  };
+
+  if (loading) {
+    return <div className="p-8 text-stone-900 dark:bg-stone-950 dark:text-stone-100">{t("Chargement du pack...", "جاري تحميل الباك...")}</div>;
+  }
+
+  if (!pack) {
+    return (
+      <div className="mx-auto max-w-xl p-8 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
+        <p className="text-lg font-medium">{t("Pack introuvable.", "الباك غير موجود.")}</p>
+        <Link to="/parfumes" className="mt-4 inline-flex rounded-full bg-stone-900 px-4 py-2 text-white dark:bg-stone-100 dark:text-stone-900">{t("Retour au catalogue", "العودة إلى الكتالوج")}</Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[linear-gradient(135deg,_#fef7ed_0%,_#fffaf0_40%,_#f5f5f4_100%)] px-4 pb-16 pt-10 dark:bg-[linear-gradient(135deg,_#0f172a_0%,_#111827_42%,_#1f2937_100%)] sm:px-6">
+      <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="space-y-4 rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-6">
+          <Link to="/parfumes" className="text-sm text-amber-700 hover:underline dark:text-amber-300">{t("Retour au catalogue", "العودة إلى الكتالوج")}</Link>
+          <h1 className="text-2xl font-semibold text-stone-900 dark:text-stone-100 sm:text-3xl">{t(pack.titleFr, pack.titleAr)}</h1>
+          <p className="text-sm text-stone-600 dark:text-stone-300">{t(pack.descriptionFr, pack.descriptionAr)}</p>
+          <p className="rounded-2xl bg-stone-50 p-3 text-sm leading-7 text-stone-700 dark:bg-stone-800 dark:text-stone-200">{t(pack.detailsFr, pack.detailsAr)}</p>
+          <div className="overflow-hidden rounded-2xl bg-stone-100 dark:bg-stone-800">
+            <img src={pack.image} alt={t(pack.titleFr, pack.titleAr)} className="h-full w-full object-cover" />
+          </div>
+        </section>
+
+        <aside className="space-y-4">
+          <section className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Contenu du pack", "محتوى الباك")}</p>
+            <div className="mt-3 space-y-2">
+              {includedPerfumes.length === 0 ? (
+                <p className="text-sm text-stone-600 dark:text-stone-300">{t("Contenu detaille indisponible pour le moment.", "تفاصيل المحتوى غير متاحة حالياً.")}</p>
+              ) : (
+                includedPerfumes.map((perfume) => (
+                  <Link key={perfume.slug} to={`/perfume/${perfume.slug}`} className="block rounded-xl border border-stone-200 p-2 text-sm hover:border-amber-300 dark:border-stone-700">
+                    <p className="font-semibold text-stone-900 dark:text-stone-100">{perfume.name}</p>
+                    <p className="text-xs text-stone-600 dark:text-stone-300">{localizePerfumeText(perfume.brand, isArabic)}</p>
+                  </Link>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-6">
+            <p className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("Option selectionnee", "العرض المختار")}</p>
+            <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">{t(purchaseOptionLabels[pack.purchaseOption].fr, purchaseOptionLabels[pack.purchaseOption].ar)}</p>
+
+            <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              {t("Prix unitaire:", "سعر الوحدة:")} <span className="font-semibold"><Currency amount={unitPrice} /></span>
+            </div>
+            <div className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              {t("Total:", "المجموع:")} <span className="font-semibold"><Currency amount={total} /></span>
+            </div>
+
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-semibold text-stone-600 dark:text-stone-300">{t("Quantite", "الكمية")}</label>
+              <input
+                className="w-full rounded-xl border border-stone-300 p-2.5 text-sm dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+                type="number"
+                min={1}
+                value={quantity}
+                onChange={(event) => setQuantity(Number(event.target.value) || 1)}
+              />
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleAddPackToCart}
+                className="rounded-xl border border-stone-900 p-3 text-sm font-medium text-stone-900 hover:bg-stone-100 dark:border-stone-300 dark:text-stone-100 dark:hover:bg-stone-800"
+              >
+                {t("Ajouter au panier", "أضف إلى السلة")}
+              </button>
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                className="rounded-xl bg-stone-900 p-3 text-sm font-medium text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300"
+              >
+                {t("Acheter maintenant", "اشترِ الآن")}
+              </button>
+            </div>
+
+            {message && <p className="mt-3 text-sm text-stone-700 dark:text-stone-300">{message}</p>}
+          </section>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function PerfumePyramid({ perfume }: { perfume: Perfume }) {
+  const { t, isArabic } = useLanguage();
+
+  const ingredientImage = (ingredient: string, palette: "amber" | "orange" | "rose") => {
+    const lower = localizePerfumeNote(ingredient, false).toLowerCase();
+
+    const ingredientPhotos: Array<{ keywords: string[]; url: string }> = [
+      { keywords: ["lemon"], url: "https://images.unsplash.com/photo-1582284540020-8acbe03f4924?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["bergamot", "citrus"], url: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["mandarin", "orange"], url: "https://images.unsplash.com/photo-1611080626969-09d3b4d5ccf1?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["grapefruit"], url: "https://images.unsplash.com/photo-1577234286642-fc512a5f8f11?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["mint"], url: "https://images.unsplash.com/photo-1628557044797-f21a177c37ec?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["pepper"], url: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["cardamom"], url: "https://images.unsplash.com/photo-1609501676725-7186f7346a6b?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["saffron"], url: "https://images.unsplash.com/photo-1596040032219-8f8d82f0bd24?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["rose"], url: "https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["peony", "violet", "floral"], url: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["lavender"], url: "https://images.unsplash.com/photo-1597848212624-e6ec2f0f8460?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["tea"], url: "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["sage"], url: "https://images.unsplash.com/photo-1618375569909-3c8616cf7731?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["vanilla"], url: "https://images.unsplash.com/photo-1603431770783-0f8619fe6b1f?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["tonka", "bean"], url: "https://images.unsplash.com/photo-1614977645540-7abd88ba8e56?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["amber"], url: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["musk"], url: "https://images.unsplash.com/photo-1615634260167-c8cdede054de?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["sandalwood", "cedar", "wood"], url: "https://images.unsplash.com/photo-1616627457668-0c6d6b3b4f84?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["patchouli", "vetiver"], url: "https://images.unsplash.com/photo-1513467655676-561b7d489a88?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["oud", "incense", "resin"], url: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["leather"], url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=200&q=80" },
+      { keywords: ["pear", "lychee", "fruit"], url: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=200&q=80" },
+    ];
+
+    const matched = ingredientPhotos.find((photo) => photo.keywords.some((keyword) => lower.includes(keyword)));
+    if (matched) {
+      return matched.url;
+    }
+
+    const backgrounds: Record<"amber" | "orange" | "rose", string> = {
+      amber: "FDE68A",
+      orange: "FED7AA",
+      rose: "FECDD3",
+    };
+
+    const colors: Record<"amber" | "orange" | "rose", string> = {
+      amber: "7C2D12",
+      orange: "9A3412",
+      rose: "9F1239",
+    };
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(ingredient)}&background=${backgrounds[palette]}&color=${colors[palette]}&size=96&bold=true`;
+  };
+
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900">
+      <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">{t("Perfume Pyramid", "هرم العطر")}</p>
+      <div className="mt-5 flex flex-col items-center gap-2">
+        <div
+          className="w-[52%] max-w-[270px] bg-amber-100 px-6 py-4 text-center dark:bg-amber-900/45"
+          style={{ clipPath: "polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%)" }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-amber-900">{t("Top Notes", "المقدمة")}</p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+            {perfume.top_notes.map((note) => (
+              <div key={`top-${note}`} className="flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-stone-900/50">
+                <img src={ingredientImage(note, "amber")} alt={localizePerfumeNote(note, isArabic)} className="h-6 w-6 rounded-full border border-amber-300 object-cover" />
+                <span className="text-[11px] font-medium text-stone-800 dark:text-stone-100">{localizePerfumeNote(note, isArabic)}</span>
               </div>
             ))}
           </div>
+        </div>
 
-          <div className="rounded-[1.75rem] bg-white p-6 shadow-xl">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Quick Actions</p>
-            <div className="mt-5 space-y-3">
-              {screen.actions.map((action) => (
-                <div key={action} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  {action}
-                </div>
-              ))}
-            </div>
+        <div
+          className="w-[76%] max-w-[390px] bg-orange-100 px-8 py-4 text-center dark:bg-orange-900/45"
+          style={{ clipPath: "polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)" }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-orange-900">{t("Heart Notes", "قلب العطر")}</p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+            {perfume.heart_notes.map((note) => (
+              <div key={`heart-${note}`} className="flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-stone-900/50">
+                <img src={ingredientImage(note, "orange")} alt={localizePerfumeNote(note, isArabic)} className="h-6 w-6 rounded-full border border-orange-300 object-cover" />
+                <span className="text-[11px] font-medium text-stone-800 dark:text-stone-100">{localizePerfumeNote(note, isArabic)}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-[1.75rem] bg-white p-6 text-left shadow-xl">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Current Route</p>
-            <p className="mt-4 text-3xl font-semibold text-slate-900">{rolePaths[user.role]}</p>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              Users now land on a dedicated screen based on their assigned role immediately after login. If they try to open another role screen directly, the app pushes them back to their own workspace.
-            </p>
+        <div
+          className="w-full max-w-[520px] bg-rose-100 px-8 py-4 text-center dark:bg-rose-900/45"
+          style={{ clipPath: "polygon(4% 0%, 96% 0%, 100% 100%, 0% 100%)" }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-rose-900">{t("Base Notes", "القاعدة")}</p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+            {perfume.base_notes.map((note) => (
+              <div key={`base-${note}`} className="flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-stone-900/50">
+                <img src={ingredientImage(note, "rose")} alt={localizePerfumeNote(note, isArabic)} className="h-6 w-6 rounded-full border border-rose-300 object-cover" />
+                <span className="text-[11px] font-medium text-stone-800 dark:text-stone-100">{localizePerfumeNote(note, isArabic)}</span>
+              </div>
+            ))}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          <div className="rounded-[1.75rem] bg-slate-900 p-6 text-left text-white shadow-xl">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Session</p>
-            <p className="mt-4 text-2xl font-semibold">Authenticated</p>
-            <p className="mt-2 text-sm text-slate-300">Token-backed access is active for this account.</p>
+function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void }) {
+  const { t, isArabic } = useLanguage();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { slug = "" } = useParams();
+  const [perfume, setPerfume] = useState<Perfume | null>(null);
+  const [catalog, setCatalog] = useState<Perfume[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [wishlist, setWishlist] = useState(false);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [isPurchaseSectionVisible, setIsPurchaseSectionVisible] = useState(false);
+  const purchaseSectionRef = useRef<HTMLElement | null>(null);
+  const [form, setForm] = useState<GuestOrderForm>({
+    customer_name: "",
+    customer_address: "",
+    customer_phone: "",
+    quantity: 1,
+    purchase_option: "single_60ml",
+  });
+
+  useEffect(() => {
+    setLoading(true);
+    setMessage("");
+
+    void api.get<Perfume>(`/perfumes/${slug}`)
+      .then((response) => setPerfume(response.data))
+      .catch(() => setPerfume(null))
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  useEffect(() => {
+    void api.get<Perfume[]>("/perfumes")
+      .then((response) => setCatalog(response.data))
+      .catch(() => setCatalog([]));
+  }, []);
+
+  const productMeta = useMemo(() => {
+    if (!perfume) {
+      return null;
+    }
+
+    return {
+      brand: perfume.brand,
+      gender: perfume.gender,
+      sizes: perfume.size_options,
+      stockStatus: perfume.stock_status,
+      fragranceFamily: perfume.fragrance_family,
+      longevity: perfume.longevity,
+      sillage: perfume.sillage,
+      vibe: perfume.vibe,
+      whenToWear: perfume.when_to_wear,
+      feeling: perfume.feeling,
+      ingredients: perfume.ingredients,
+      shipping: perfume.delivery_info,
+      returns: perfume.return_policy,
+      authenticity: perfume.authenticity_guarantee,
+      rating: perfume.average_rating,
+      reviewCount: perfume.reviews_count,
+      reviews: perfume.reviews,
+      isBestSeller: perfume.is_best_seller,
+      isTrending: perfume.is_trending,
+      discountPercentage: perfume.discount_percentage,
+      similarSlugs: perfume.similar_slugs,
+    };
+  }, [perfume]);
+
+  const preselectedPurchaseOption = useMemo(() => {
+    const state = location.state as { preselectedPurchaseOption?: PurchaseOption } | null;
+    const option = state?.preselectedPurchaseOption;
+    if (!option) {
+      return null;
+    }
+
+    return (Object.prototype.hasOwnProperty.call(purchaseOptionLabels, option) ? option : null) as PurchaseOption | null;
+  }, [location.state]);
+
+  useEffect(() => {
+    if (!productMeta) {
+      return;
+    }
+
+    setForm((current) => ({ ...current, purchase_option: preselectedPurchaseOption ?? "single_60ml" }));
+  }, [productMeta, preselectedPurchaseOption]);
+
+  const mediaItems = useMemo(() => {
+    if (!perfume) {
+      return [];
+    }
+
+    const fallbackImage = resolvePerfumeImage(perfume);
+
+    return [
+      { label: "Bottle Front", image: perfume.bottle_images[0] ?? fallbackImage, tone: "from-amber-200 to-amber-50" },
+      { label: "Packaging", image: perfume.packaging_images[0] ?? fallbackImage, tone: "from-rose-200 to-rose-50" },
+      { label: "Lifestyle", image: perfume.lifestyle_images[0] ?? fallbackImage, tone: "from-stone-300 to-stone-100" },
+    ];
+  }, [perfume]);
+
+  const relatedPerfumes = useMemo(() => {
+    if (!perfume || !productMeta) {
+      return [];
+    }
+
+    const similarBySlug = catalog.filter((item) => productMeta.similarSlugs.includes(item.slug));
+    if (similarBySlug.length > 0) {
+      return similarBySlug.slice(0, 3);
+    }
+
+    return catalog.filter((item) => item.id !== perfume.id).slice(0, 3);
+  }, [catalog, perfume, productMeta]);
+
+  const unitPrice = useMemo(() => {
+    if (!perfume) {
+      return 0;
+    }
+
+    const prices: Record<PurchaseOption, number> = {
+      single_30ml: perfume.price * 0.6,
+      single_60ml: perfume.price,
+      pack_30ml_x4: 150,
+      pack_50ml_x3: 180,
+    };
+
+    return prices[form.purchase_option];
+  }, [perfume, form.purchase_option]);
+
+  const total = useMemo(() => unitPrice * form.quantity, [unitPrice, form.quantity]);
+
+  const handleAddToCart = () => {
+    if (!perfume) {
+      return;
+    }
+
+    onAddToCart({
+      key: `${perfume.id}-${form.purchase_option}`,
+      perfumeId: perfume.id,
+      perfumeName: perfume.name,
+      perfumeSlug: perfume.slug,
+      imageUrl: resolvePerfumeImage(perfume),
+      purchaseOption: form.purchase_option,
+      quantity: form.quantity,
+      unitPrice,
+    });
+
+    const optionLabel = t(
+      purchaseOptionLabels[form.purchase_option].fr,
+      purchaseOptionLabels[form.purchase_option].ar,
+    );
+    setMessage(t(
+      `${perfume.name} (${optionLabel}) ajoute au panier.`,
+      `${perfume.name} (${optionLabel}) تمت إضافته إلى السلة.`,
+    ));
+  };
+
+  const handleBuyNow = () => {
+    purchaseSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  useEffect(() => {
+    const target = purchaseSectionRef.current;
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsPurchaseSectionVisible(entry.isIntersecting);
+      },
+      { threshold: 0.2 },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [loading, perfume?.id]);
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!perfume) {
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage("");
+
+    try {
+      const response = await api.post<OrderResponse>("/orders", {
+        perfume_id: perfume.id,
+        customer_name: form.customer_name,
+        customer_address: form.customer_address,
+        customer_phone: form.customer_phone,
+        quantity: form.quantity,
+        purchase_option: form.purchase_option,
+      });
+
+      navigate("/", {
+        replace: true,
+        state: { successMessage: `${response.data.message} Your commande has been created.` },
+      });
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        const firstError = error.response?.data?.errors
+          ? Object.values(error.response.data.errors).flat()[0]
+          : undefined;
+
+        setMessage(typeof firstError === "string" ? firstError : error.response?.data?.message || "Order failed.");
+      } else {
+        setMessage("Order failed.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-8 text-stone-900 dark:bg-stone-950 dark:text-stone-100">{t("Loading perfume...", "جاري تحميل العطر...")}</div>;
+  }
+
+  if (!perfume) {
+    return (
+      <div className="mx-auto max-w-xl p-8 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
+        <p className="text-lg font-medium">Perfume not found.</p>
+        <Link to="/" className="mt-4 inline-flex rounded-full bg-stone-900 px-4 py-2 text-white dark:bg-stone-100 dark:text-stone-900">{t("Back to catalog", "العودة إلى الكتالوج")}</Link>
+      </div>
+    );
+  }
+
+  if (!productMeta) {
+    return <div className="p-8 text-stone-900 dark:bg-stone-950 dark:text-stone-100">Loading product details...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-[linear-gradient(135deg,_#fef7ed_0%,_#fffaf0_40%,_#f5f5f4_100%)] px-4 pb-24 pt-16 dark:bg-[linear-gradient(135deg,_#0f172a_0%,_#111827_42%,_#1f2937_100%)] sm:px-6 lg:pb-10 lg:pt-10">
+      <div className="mx-auto grid max-w-7xl gap-5 sm:gap-6 lg:gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="space-y-4 sm:space-y-6">
+          <article className="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-xl dark:border-stone-700 dark:bg-stone-900">
+            <div className="aspect-[5/4] bg-stone-200 dark:bg-stone-800">
+              {mediaItems[activeMediaIndex]?.image ? (
+                <img src={mediaItems[activeMediaIndex].image ?? ""} alt={perfume.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-stone-500 dark:text-stone-300">No image</div>
+              )}
+            </div>
+
+            <div className="space-y-4 p-4 sm:space-y-5 sm:p-7">
+              <div className="flex flex-wrap items-center gap-2">
+                {productMeta.isBestSeller && <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-900">{t("Best Seller", "الأكثر مبيعاً")}</span>}
+                {productMeta.isTrending && <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">{t("Trending", "الأكثر رواجاً")}</span>}
+                {productMeta.discountPercentage > 0 && (
+                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">{t(`-${productMeta.discountPercentage}% offer`, `خصم ${productMeta.discountPercentage}%`)}</span>
+                )}
+              </div>
+
+              <Link to="/" className="text-sm text-amber-700 hover:underline dark:text-amber-300">{t("Back to catalog", "العودة إلى الكتالوج")}</Link>
+              <h1 className="text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100 sm:text-4xl">{perfume.name}</h1>
+              <p className="inline-flex w-fit rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-800">
+                {masterQualityLabel(t)}
+              </p>
+              <p className="text-xs text-stone-600 dark:text-stone-300">{masterQualityDisclaimer(t)}</p>
+
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                className="w-full rounded-xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300 lg:hidden"
+              >
+                {t("Aller au formulaire de commande", "الانتقال إلى نموذج الطلب")}
+              </button>
+
+              <div className="grid gap-3 rounded-2xl bg-stone-50 p-4 text-sm text-stone-700 dark:bg-stone-800 dark:text-stone-200 sm:grid-cols-2">
+                <p><span className="font-semibold">{t("Brand:", "العلامة التجارية:")}</span> {localizePerfumeText(productMeta.brand, isArabic)}</p>
+                <p><span className="font-semibold">{t("Gender:", "الجنس:")}</span> {localizePerfumeText(productMeta.gender, isArabic)}</p>
+                <p><span className="font-semibold">{t("Price:", "السعر:")}</span> <Currency amount={perfume.price} /></p>
+                <p><span className="font-semibold">{t("Stock:", "المخزون:")}</span> {localizePerfumeText(productMeta.stockStatus, isArabic)}</p>
+                <p><span className="font-semibold">{t("Fragrance Family:", "العائلة العطرية:")}</span> {localizePerfumeText(productMeta.fragranceFamily, isArabic)}</p>
+                <p><span className="font-semibold">{t("Size Options:", "خيارات الحجم:")}</span> {productMeta.sizes.join(", ")}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3">
+                {mediaItems.map((media, index) => (
+                  <button
+                    key={media.label}
+                    type="button"
+                    onClick={() => setActiveMediaIndex(index)}
+                    className={`overflow-hidden rounded-xl border text-left ${activeMediaIndex === index ? "border-stone-900 dark:border-stone-200" : "border-stone-200 dark:border-stone-700"}`}
+                  >
+                    <div className={`flex aspect-[4/3] items-center justify-center bg-gradient-to-br ${media.tone}`}>
+                      {media.image ? (
+                        <img src={media.image} alt={media.label} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-xs font-semibold text-stone-700">{media.label}</span>
+                      )}
+                    </div>
+                    <p className="px-3 py-2 text-xs font-medium text-stone-700 dark:text-stone-200">{media.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Fragrance Details", "تفاصيل العطر")}</h2>
+            <div className="mt-4 grid gap-3 rounded-2xl bg-stone-50 p-4 text-sm text-stone-700 dark:bg-stone-800 dark:text-stone-200 sm:grid-cols-2">
+              <p><span className="font-semibold">{t("Top Notes:", "المقدمة:")}</span> {perfume.top_notes.map((note) => localizePerfumeNote(note, isArabic)).join(" • ")}</p>
+              <p><span className="font-semibold">{t("Middle Notes:", "قلب العطر:")}</span> {perfume.heart_notes.map((note) => localizePerfumeNote(note, isArabic)).join(" • ")}</p>
+              <p><span className="font-semibold">{t("Base Notes:", "القاعدة:")}</span> {perfume.base_notes.map((note) => localizePerfumeNote(note, isArabic)).join(" • ")}</p>
+              <p><span className="font-semibold">{t("Longevity:", "الثبات:")}</span> {localizePerfumeText(productMeta.longevity, isArabic)}</p>
+              <p><span className="font-semibold">{t("Sillage:", "الفوحان:")}</span> {localizePerfumeText(productMeta.sillage, isArabic)}</p>
+              <p><span className="font-semibold">{t("Origin:", "بلد المنشأ:")}</span> {localizePerfumeText(perfume.country_of_origin, isArabic)}</p>
+            </div>
+
+            <div className="mt-6">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Fragrance Pyramid", "هرم العطر")}</p>
+              <PerfumePyramid perfume={perfume} />
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Description", "الوصف")}</h2>
+            <p className="mt-4 text-sm leading-7 text-stone-600 dark:text-stone-300">{localizePerfumeText(perfume.description, isArabic)}</p>
+            <div className="mt-4 grid gap-3 rounded-2xl bg-amber-50/70 p-4 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              <p><span className="font-semibold">{t("Vibe:", "الطابع:")}</span> {localizePerfumeText(productMeta.vibe, isArabic)}</p>
+              <p><span className="font-semibold">{t("When to wear:", "وقت الاستخدام:")}</span> {localizePerfumeText(productMeta.whenToWear, isArabic)}</p>
+              <p><span className="font-semibold">{t("Feeling:", "الإحساس:")}</span> {localizePerfumeText(productMeta.feeling, isArabic)}</p>
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Reviews & Ratings", "التقييمات والمراجعات")}</h2>
+            <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">{t(`Rating ${productMeta.rating.toFixed(1)}/5 from ${productMeta.reviewCount} reviews`, `التقييم ${productMeta.rating.toFixed(1)} من 5 من ${productMeta.reviewCount} مراجعة`)}</p>
+
+            <div className="mt-4 space-y-3">
+              {productMeta.reviews.map((review) => (
+                <article key={`${review.author}-${review.date}`} className="rounded-2xl border border-stone-200 p-4 dark:border-stone-700">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-stone-900 dark:text-stone-100">{review.author}</p>
+                    <p className="text-sm text-amber-700">{review.rating}/5</p>
+                  </div>
+                  <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">{review.comment}</p>
+                  <p className="mt-2 text-xs uppercase tracking-[0.12em] text-stone-500">{review.date}</p>
+                </article>
+              ))}
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Extra Useful Info", "معلومات إضافية مفيدة")}</h2>
+            <div className="mt-4 space-y-3 text-sm text-stone-700 dark:text-stone-200">
+              <p><span className="font-semibold">{t("Ingredients:", "المكونات:")}</span> {productMeta.ingredients.map((item) => localizePerfumeNote(item, isArabic)).join(", ")}</p>
+              <p><span className="font-semibold">{t("Delivery:", "التوصيل:")}</span> {localizePerfumeText(productMeta.shipping, isArabic)}</p>
+              <p><span className="font-semibold">{t("Return Policy:", "سياسة الإرجاع:")}</span> {localizePerfumeText(productMeta.returns, isArabic)}</p>
+              <p><span className="font-semibold">{t("Quality Notice:", "تنبيه الجودة:")}</span> {masterQualityDisclaimer(t)}</p>
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("People Also Bought", "منتجات اشتراها الآخرون")}</h2>
+            {relatedPerfumes.length === 0 ? (
+              <p className="mt-3 text-sm text-stone-600 dark:text-stone-300">{t("More similar fragrances coming soon.", "ستتوفر عطور مشابهة قريباً.")}</p>
+            ) : (
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {relatedPerfumes.map((item) => (
+                  <Link key={item.id} to={`/perfume/${item.slug}`} className="rounded-2xl border border-stone-200 p-3 transition hover:-translate-y-1 hover:shadow-lg dark:border-stone-700">
+                    <div className="aspect-[4/3] overflow-hidden rounded-xl bg-stone-100 dark:bg-stone-800">
+                      {resolvePerfumeImage(item) ? (
+                        <img src={resolvePerfumeImage(item) ?? ""} alt={item.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-sm text-stone-500">No image</div>
+                      )}
+                    </div>
+                    <p className="mt-3 text-sm font-semibold text-stone-900 dark:text-stone-100">{item.name}</p>
+                    <p className="text-xs text-stone-600 dark:text-stone-300">{t("Similar fragrance profile", "طابع عطري مشابه")}</p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </article>
+        </section>
+
+        <aside className="space-y-4 sm:space-y-6 lg:sticky lg:top-8 lg:h-fit">
+          <section ref={purchaseSectionRef} id="purchase-section" className="rounded-[2rem] border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">{t("Purchase", "الشراء")}</p>
+            <h2 className="mt-3 text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Commander ce parfum", "اشترِ هذا العطر")}</h2>
+
+            <div className="mt-4 grid gap-2">
+              <p className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("Choisir une option", "اختر العرض")}</p>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(purchaseOptionLabels) as PurchaseOption[]).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setForm((current) => ({ ...current, purchase_option: option }))}
+                    className={`rounded-full px-3 py-2 text-sm font-medium sm:px-4 ${form.purchase_option === option ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900" : "border border-stone-300 text-stone-700 dark:border-stone-600 dark:text-stone-200"}`}
+                  >
+                    {t(purchaseOptionLabels[option].fr, purchaseOptionLabels[option].ar)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              {t("Prix unitaire:", "سعر الوحدة:")} <span className="font-semibold"><Currency amount={unitPrice} /></span>
+            </div>
+
+            <div className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              {t("Total:", "المجموع:")} <span className="font-semibold"><Currency amount={total} /></span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="rounded-xl border border-stone-900 p-3 text-sm font-medium text-stone-900 hover:bg-stone-100 dark:border-stone-300 dark:text-stone-100 dark:hover:bg-stone-800"
+              >
+                {t("Ajouter au panier", "أضف إلى السلة")}
+              </button>
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                className="rounded-xl bg-stone-900 p-3 text-sm font-medium text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300"
+              >
+                {t("Acheter maintenant", "اشترِ الآن")}
+              </button>
+            </div>
+
             <button
               type="button"
+              onClick={() => setWishlist((current) => !current)}
+              className="mt-2 w-full rounded-xl border border-rose-300 p-3 text-sm font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-500 dark:text-rose-300 dark:hover:bg-rose-950/30"
+            >
+              {wishlist ? t("Ajoute aux favoris", "تم الحفظ في المفضلة") : t("Ajouter aux favoris", "أضف إلى المفضلة")}
+            </button>
+
+            <form className="mt-6 space-y-4" onSubmit={(event) => void onSubmit(event)}>
+              <input
+                className="w-full rounded-xl border border-stone-300 p-3.5 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+                placeholder={t("Votre nom", "اسمك")}
+                value={form.customer_name}
+                onChange={(event) => setForm((current) => ({ ...current, customer_name: event.target.value }))}
+              />
+              <textarea
+                className="min-h-28 w-full rounded-xl border border-stone-300 p-3.5 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+                placeholder={t("Votre adresse", "عنوانك")}
+                value={form.customer_address}
+                onChange={(event) => setForm((current) => ({ ...current, customer_address: event.target.value }))}
+              />
+              <input
+                className="w-full rounded-xl border border-stone-300 p-3.5 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+                placeholder={t("Numero de telephone", "رقم الهاتف")}
+                value={form.customer_phone}
+                onChange={(event) => setForm((current) => ({ ...current, customer_phone: event.target.value }))}
+              />
+              <input
+                className="w-full rounded-xl border border-stone-300 p-3.5 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+                type="number"
+                min={1}
+                value={form.quantity}
+                onChange={(event) => setForm((current) => ({ ...current, quantity: Number(event.target.value) || 1 }))}
+              />
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full rounded-xl bg-emerald-700 p-3 font-medium text-white disabled:opacity-70"
+              >
+                {submitting ? t("Validation de la commande...", "جارٍ تنفيذ الطلب...") : t("Confirmer la commande", "تأكيد الطلب")}
+              </button>
+            </form>
+
+            {message && <p className="mt-3 text-sm text-stone-700 dark:text-stone-300">{message}</p>}
+          </section>
+
+          <section className="rounded-[2rem] border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Product Summary", "ملخص المنتج")}</p>
+            <div className="mt-3 space-y-2 text-sm text-stone-700 dark:text-stone-200">
+              <p><span className="font-semibold">{t("Recipe:", "التركيبة:")}</span> {localizePerfumeText(perfume.recipe, isArabic)}</p>
+              <p><span className="font-semibold">{t("Longevity:", "الثبات:")}</span> {localizePerfumeText(productMeta.longevity, isArabic)}</p>
+              <p><span className="font-semibold">{t("Sillage:", "الفوحان:")}</span> {localizePerfumeText(productMeta.sillage, isArabic)}</p>
+              <p><span className="font-semibold">{t("Rating:", "التقييم:")}</span> {productMeta.rating.toFixed(1)} / 5</p>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      {!isPurchaseSectionVisible && (
+        <button
+          type="button"
+          onClick={handleBuyNow}
+          className="fixed bottom-4 left-4 right-4 z-40 rounded-full bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-xl hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 lg:hidden"
+        >
+          {t("Commander ce parfum", "اطلب هذا العطر")}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function AdminLogin({ onLogin }: { onLogin: (form: AdminLoginForm) => Promise<void> }) {
+  const [form, setForm] = useState<AdminLoginForm>({ email: "", password: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setMessage("");
+
+    try {
+      await onLogin(form);
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        const firstError = error.response?.data?.errors
+          ? Object.values(error.response.data.errors).flat()[0]
+          : undefined;
+
+        setMessage(typeof firstError === "string" ? firstError : error.response?.data?.message || "Login failed.");
+      } else {
+        setMessage("Login failed.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-stone-100 px-6 py-10 dark:bg-stone-950">
+      <div className="mx-auto max-w-md rounded-3xl bg-white p-8 shadow-xl dark:bg-stone-900">
+        <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">Admin Access</p>
+        <h1 className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100">Admin Login</h1>
+        <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">Login is restricted to admin accounts only.</p>
+
+        <form className="mt-6 space-y-4" onSubmit={(event) => void handleSubmit(event)}>
+          <input
+            className="w-full rounded-xl border border-stone-300 p-3 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+            placeholder="Email"
+            value={form.email}
+            onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+          />
+          <input
+            className="w-full rounded-xl border border-stone-300 p-3 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+            placeholder="Password"
+            type="password"
+            value={form.password}
+            onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+          />
+          <button className="w-full rounded-xl bg-stone-900 p-3 font-medium text-white disabled:opacity-70 dark:bg-stone-100 dark:text-stone-900" disabled={submitting}>
+            {submitting ? "Logging in..." : "Login"}
+          </button>
+
+          {message && <p className="text-sm text-rose-700">{message}</p>}
+        </form>
+
+        <p className="mt-4 text-sm text-stone-500 dark:text-stone-300">Seed admin: admin@example.com / Admin123456</p>
+        <Link to="/" className="mt-4 inline-flex text-sm text-amber-700 hover:underline dark:text-amber-300">Back to catalog</Link>
+      </div>
+    </div>
+  );
+}
+
+function AdminDashboard({ user, onLogout }: { user: User; onLogout: () => Promise<void> }) {
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
+  const [message, setMessage] = useState("");
+
+  const fetchOrders = async (showLoading = false) => {
+    if (showLoading) {
+      setLoading(true);
+    }
+
+    try {
+      const response = await api.get<AdminOrder[]>("/admin/orders");
+      setOrders(response.data);
+    } catch {
+      setMessage("Failed to load commandes.");
+    } finally {
+      if (showLoading) {
+        setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    void fetchOrders(true);
+
+    const interval = window.setInterval(() => {
+      void fetchOrders(false);
+    }, 8000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  const pendingOrders = orders.filter((order) => order.status !== "validated");
+  const validatedOrders = orders.filter((order) => order.status === "validated");
+  const totalRevenue = validatedOrders.reduce((sum, order) => sum + order.total_price, 0);
+  const averageOrderValue = orders.length === 0 ? 0 : orders.reduce((sum, order) => sum + order.total_price, 0) / orders.length;
+  const validationRate = orders.length === 0 ? 0 : (validatedOrders.length / orders.length) * 100;
+  const today = new Date().toDateString();
+  const ordersToday = orders.filter((order) => order.created_at && new Date(order.created_at).toDateString() === today).length;
+  const latestOrders = orders.slice(0, 5);
+
+  const formatOrderDate = (createdAt?: string | null) => {
+    if (!createdAt) {
+      return "-";
+    }
+
+    return new Date(createdAt).toLocaleString();
+  };
+
+  const markAsValidated = async (orderId: number) => {
+    setUpdatingOrderId(orderId);
+    setMessage("");
+
+    try {
+      const response = await api.patch<{ message: string; order: AdminOrder }>(`/admin/orders/${orderId}/validate`);
+      setOrders((current) => current.map((order) => (order.id === orderId ? response.data.order : order)));
+      setMessage(response.data.message);
+    } catch {
+      setMessage("Failed to validate commande.");
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[linear-gradient(140deg,_#e7ecef_0%,_#f8f7f4_38%,_#fef7ed_100%)] px-4 py-8 dark:bg-[linear-gradient(140deg,_#020617_0%,_#111827_42%,_#1f2937_100%)] sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="h-fit rounded-3xl border border-stone-200 bg-white/95 p-6 shadow-xl dark:border-stone-700 dark:bg-stone-900/95 lg:sticky lg:top-6">
+          <p className="text-xs uppercase tracking-[0.28em] text-stone-500 dark:text-stone-300">Perfume House</p>
+          <h1 className="mt-2 text-2xl font-semibold text-stone-900 dark:text-stone-100">Admin Console</h1>
+          <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">{user.name}</p>
+
+          <nav className="mt-8 space-y-2">
+            <a href="#stats" className="block rounded-xl bg-stone-100 px-4 py-2 text-sm font-medium text-stone-800 dark:bg-stone-800 dark:text-stone-100">Overview</a>
+            <a href="#pending-orders" className="block rounded-xl px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800">Pending Tasks</a>
+            <a href="#validated-orders" className="block rounded-xl px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800">Validated Orders</a>
+            <a href="#recent-activity" className="block rounded-xl px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800">Recent Activity</a>
+          </nav>
+
+          <div className="mt-8 space-y-3">
+            <button
+              onClick={() => void fetchOrders(true)}
+              className="w-full rounded-xl border border-amber-700 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-50 dark:border-amber-300 dark:text-amber-200 dark:hover:bg-amber-950/40"
+            >
+              Refresh Data
+            </button>
+            <Link to="/" className="block w-full rounded-xl border border-stone-900 px-4 py-2 text-center text-sm font-medium text-stone-900 hover:bg-stone-900 hover:text-white dark:border-stone-300 dark:text-stone-100 dark:hover:bg-stone-100 dark:hover:text-stone-900">
+              Open Catalog
+            </Link>
+            <button
               onClick={() => void onLogout()}
-              className="mt-6 rounded-full bg-white px-5 py-2 text-sm font-medium text-slate-900"
+              className="w-full rounded-xl bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300"
             >
               Logout
             </button>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+        </aside>
 
-function AuthScreen({
-  mode,
-  setMode,
-  form,
-  updateField,
-  submitting,
-  message,
-  handleSubmit,
-}: {
-  mode: AuthMode;
-  setMode: (mode: AuthMode) => void;
-  form: AuthState;
-  updateField: <K extends keyof AuthState>(field: K, value: AuthState[K]) => void;
-  submitting: boolean;
-  message: string;
-  handleSubmit: (event?: FormEvent<HTMLFormElement>) => Promise<void>;
-}) {
-  return (
-    <div className="min-h-screen bg-slate-100 px-6 py-10">
-      <div className="mx-auto max-w-md rounded-3xl bg-white p-8 shadow-xl">
-        <div className="mb-6 text-center">
-          <p className="text-sm uppercase tracking-[0.25em] text-slate-500">House Market</p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">{mode === "login" ? "Login" : "Create Account"}</h1>
-          <p className="mt-2 text-slate-600">
-            {mode === "login" ? "Access your account with email and password." : "Register as a client or vendor."}
-          </p>
-        </div>
-
-        <div className="mt-4 flex justify-center gap-2 rounded-full bg-slate-100 p-1">
-          <button
-            type="button"
-            onClick={() => setMode("login")}
-            className={`rounded-full px-4 py-2 text-sm font-medium ${mode === "login" ? "bg-slate-900 text-white" : "text-slate-600"}`}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("register")}
-            className={`rounded-full px-4 py-2 text-sm font-medium ${mode === "register" ? "bg-slate-900 text-white" : "text-slate-600"}`}
-          >
-            Register
-          </button>
-        </div>
-
-        <form className="mt-6 space-y-4" onSubmit={(event) => void handleSubmit(event)}>
-          {mode === "register" && (
-            <input
-              className="w-full rounded-xl border border-slate-200 p-3"
-              placeholder="Full name"
-              value={form.name}
-              onChange={(event) => updateField("name", event.target.value)}
-            />
-          )}
-
-          <input
-            className="w-full rounded-xl border border-slate-200 p-3"
-            placeholder="Email"
-            value={form.email}
-            onChange={(event) => updateField("email", event.target.value)}
-          />
-
-          <input
-            className="w-full rounded-xl border border-slate-200 p-3"
-            placeholder="Password"
-            type="password"
-            value={form.password}
-            onChange={(event) => updateField("password", event.target.value)}
-          />
-
-          {mode === "register" && (
-            <>
-              <input
-                className="w-full rounded-xl border border-slate-200 p-3"
-                placeholder="Confirm password"
-                type="password"
-                value={form.passwordConfirmation}
-                onChange={(event) => updateField("passwordConfirmation", event.target.value)}
-              />
-
-              <select
-                className="w-full rounded-xl border border-slate-200 p-3"
-                value={form.role}
-                onChange={(event) => updateField("role", event.target.value as "client" | "vendor")}
-              >
-                <option value="client">Client</option>
-                <option value="vendor">Vendor</option>
-              </select>
-            </>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-xl bg-slate-900 p-3 font-medium text-white disabled:opacity-60"
-          >
-            {submitting ? "Please wait..." : mode === "login" ? "Login" : "Register"}
-          </button>
-
-          {message && <p className="text-center text-sm text-rose-600">{message}</p>}
-
-          {mode === "login" && (
-            <p className="text-center text-sm text-slate-500">
-              Admin seed: admin@example.com / Admin123456
+        <main className="space-y-6">
+          <section className="rounded-3xl border border-stone-200 bg-white p-7 shadow-xl dark:border-stone-700 dark:bg-stone-900">
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">Operations Dashboard</p>
+            <h2 className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100">Orders and Fulfillment</h2>
+            <p className="mt-3 max-w-3xl text-sm text-stone-600 dark:text-stone-300">
+              Validate pending guest orders quickly, monitor performance statistics, and track activity with full timestamps.
             </p>
-          )}
-        </form>
+            {message && <p className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900">{message}</p>}
+          </section>
+
+          <section id="stats" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <article className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900">
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Total Orders</p>
+              <p className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100">{orders.length}</p>
+            </article>
+            <article className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.2em] text-amber-800">Pending Tasks</p>
+              <p className="mt-2 text-3xl font-semibold text-amber-900">{pendingOrders.length}</p>
+            </article>
+            <article className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.2em] text-emerald-800">Validated</p>
+              <p className="mt-2 text-3xl font-semibold text-emerald-900">{validatedOrders.length}</p>
+            </article>
+            <article className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900">
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Validated Revenue</p>
+              <p className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100"><Currency amount={totalRevenue} /></p>
+            </article>
+            <article className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900">
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Avg. Order Value</p>
+              <p className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100"><Currency amount={averageOrderValue} /></p>
+            </article>
+            <article className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900">
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Today / Validation Rate</p>
+              <p className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100">{ordersToday}</p>
+              <p className="mt-1 text-sm text-stone-600 dark:text-stone-300">{validationRate.toFixed(1)}% validated</p>
+            </article>
+          </section>
+
+          <section id="pending-orders" className="rounded-3xl border border-stone-200 bg-white p-7 shadow-xl dark:border-stone-700 dark:bg-stone-900">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <h2 className="text-2xl font-semibold text-stone-900">Pending Orders</h2>
+              <p className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
+                {pendingOrders.length} waiting validation
+              </p>
+            </div>
+
+            {loading ? (
+              <p className="text-stone-600 dark:text-stone-300">Loading orders...</p>
+            ) : pendingOrders.length === 0 ? (
+              <p className="text-stone-600 dark:text-stone-300">No pending orders.</p>
+            ) : (
+              <div className="space-y-3">
+                {pendingOrders.map((order) => (
+                  <article key={order.id} className="rounded-2xl border border-stone-200 p-4 dark:border-stone-700">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm text-stone-500 dark:text-stone-300">Order #{order.id} • {formatOrderDate(order.created_at)}</p>
+                        <p className="text-lg font-semibold text-stone-900 dark:text-stone-100">{order.perfume ?? "Perfume"}</p>
+                        <p className="text-sm text-stone-600 dark:text-stone-300">{order.customer_name} • Qty {order.quantity} • {order.purchase_option}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setExpandedOrderId((current) => (current === order.id ? null : order.id))}
+                          className="rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-800 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-100 dark:hover:bg-stone-800"
+                        >
+                          {expandedOrderId === order.id ? "Hide" : "Details"}
+                        </button>
+                        <button
+                          onClick={() => void markAsValidated(order.id)}
+                          disabled={updatingOrderId === order.id}
+                          className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-70"
+                        >
+                          {updatingOrderId === order.id ? "Validating..." : "Mark Validated"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {expandedOrderId === order.id && (
+                      <div className="mt-4 grid gap-2 rounded-xl bg-stone-50 p-4 text-sm text-stone-700 dark:bg-stone-800 dark:text-stone-200">
+                        <p><span className="font-semibold">Guest Name:</span> {order.customer_name}</p>
+                        <p><span className="font-semibold">Address:</span> {order.customer_address}</p>
+                        <p><span className="font-semibold">Phone:</span> {order.customer_phone ?? "-"}</p>
+                        <p><span className="font-semibold">Offer:</span> {order.purchase_option}</p>
+                        <p><span className="font-semibold">Total:</span> <Currency amount={order.total_price} /></p>
+                        <p><span className="font-semibold">Created At:</span> {formatOrderDate(order.created_at)}</p>
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section id="validated-orders" className="rounded-3xl border border-stone-200 bg-white p-7 shadow-xl dark:border-stone-700 dark:bg-stone-900">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <h2 className="text-2xl font-semibold text-stone-900">Validated Orders</h2>
+              <p className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
+                {validatedOrders.length} completed
+              </p>
+            </div>
+
+            {loading ? (
+              <p className="text-stone-600 dark:text-stone-300">Loading orders...</p>
+            ) : validatedOrders.length === 0 ? (
+              <p className="text-stone-600 dark:text-stone-300">No validated orders yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {validatedOrders.map((order) => (
+                  <article key={order.id} className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm text-emerald-800">Order #{order.id} • {formatOrderDate(order.created_at)}</p>
+                        <p className="text-lg font-semibold text-stone-900 dark:text-stone-100">{order.perfume ?? "Perfume"}</p>
+                        <p className="text-sm text-stone-700 dark:text-stone-200">{order.customer_name} • Qty {order.quantity} • {order.purchase_option}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-emerald-800">Validated</p>
+                        <p className="text-sm text-stone-700 dark:text-stone-200"><Currency amount={order.total_price} /></p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section id="recent-activity" className="rounded-3xl border border-stone-200 bg-white p-7 shadow-xl dark:border-stone-700 dark:bg-stone-900">
+            <h2 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">Latest Activity</h2>
+            {latestOrders.length === 0 ? (
+              <p className="mt-3 text-stone-600 dark:text-stone-300">No activity yet.</p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {latestOrders.map((order) => (
+                  <div key={order.id} className="rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-700 dark:border-stone-700 dark:text-stone-200">
+                    <p>
+                      <span className="font-semibold">Order #{order.id}</span> by {order.customer_name} ({order.status})
+                    </p>
+                    <p className="mt-1 text-xs uppercase tracking-[0.12em] text-stone-500">{formatOrderDate(order.created_at)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
       </div>
     </div>
   );
-}
-
-function ProtectedRoleRoute({ user, role, onLogout }: { user: User | null; role: UserRole; onLogout: () => Promise<void> }) {
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (user.role !== role) {
-    return <Navigate to={rolePaths[user.role]} replace />;
-  }
-
-  return <RoleDashboard user={user} onLogout={onLogout} />;
 }
 
 function App() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<AuthMode>("login");
+  const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [form, setForm] = useState<AuthState>({
-    name: "",
-    email: "",
-    password: "",
-    passwordConfirmation: "",
-    role: "client",
+  const [language, setLanguage] = useState<Language>(() => {
+    const savedLanguage = window.localStorage.getItem(languageStorageKey);
+    if (savedLanguage === "ar" || savedLanguage === "fr") {
+      return savedLanguage;
+    }
+
+    if (savedLanguage === "en") {
+      return "fr";
+    }
+
+    return window.navigator.language.startsWith("ar") ? "ar" : "fr";
   });
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [hideEmptyCartPrompt, setHideEmptyCartPrompt] = useState(false);
+
+  useEffect(() => {
+    window.localStorage.setItem(languageStorageKey, language);
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+  }, [language]);
+
+  useEffect(() => {
+    document.documentElement.classList.remove("dark");
+  }, []);
 
   useEffect(() => {
     const token = window.localStorage.getItem(tokenStorageKey);
@@ -305,68 +1829,12 @@ function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  const updateField = <K extends keyof AuthState>(field: K, value: AuthState[K]) => {
-    setForm((current) => ({ ...current, [field]: value }));
-  };
-
-  const resetForm = () => {
-    setForm({
-      name: "",
-      email: "",
-      password: "",
-      passwordConfirmation: "",
-      role: "client",
-    });
-  };
-
-  const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
-    event?.preventDefault();
-    setSubmitting(true);
-    setMessage("");
-
-    try {
-      if (mode === "register" && form.password !== form.passwordConfirmation) {
-        setMessage("Passwords do not match.");
-        return;
-      }
-
-      const payload = mode === "register"
-        ? {
-            name: form.name,
-            email: form.email,
-            password: form.password,
-            password_confirmation: form.passwordConfirmation,
-            role: form.role,
-          }
-        : {
-            email: form.email,
-            password: form.password,
-          };
-
-      const endpoint = mode === "register" ? "/register" : "/login";
-      const response = await api.post<{ access_token: string; user: User }>(endpoint, payload);
-
-      window.localStorage.setItem(tokenStorageKey, response.data.access_token);
-      api.defaults.headers.common.Authorization = `Bearer ${response.data.access_token}`;
-      setUser(response.data.user);
-      resetForm();
-      navigate(rolePaths[response.data.user.role], { replace: true });
-    } catch (error: unknown) {
-      const backendErrors = isAxiosError(error) ? error.response?.data?.errors : undefined;
-
-      if (backendErrors) {
-        const firstError = Object.values(backendErrors).flat()[0];
-        setMessage(typeof firstError === "string" ? firstError : "Authentication failed.");
-      } else {
-        setMessage(
-          isAxiosError(error)
-            ? error.response?.data?.message || "Authentication failed."
-            : "Authentication failed."
-        );
-      }
-    } finally {
-      setSubmitting(false);
-    }
+  const handleLogin = async (form: AdminLoginForm) => {
+    const response = await api.post<{ access_token: string; user: User }>("/login", form);
+    window.localStorage.setItem(tokenStorageKey, response.data.access_token);
+    api.defaults.headers.common.Authorization = `Bearer ${response.data.access_token}`;
+    setUser(response.data.user);
+    navigate("/admin", { replace: true });
   };
 
   const handleLogout = async () => {
@@ -376,55 +1844,136 @@ function App() {
       window.localStorage.removeItem(tokenStorageKey);
       delete api.defaults.headers.common.Authorization;
       setUser(null);
-      setMode("login");
-      resetForm();
       navigate("/", { replace: true });
     }
   };
 
+  const handleAddToCart = (item: CartItem) => {
+    setHideEmptyCartPrompt(false);
+    setIsCartOpen(true);
+    setCartItems((current) => {
+      const existingIndex = current.findIndex((entry) => entry.key === item.key);
+      if (existingIndex === -1) {
+        return [...current, item];
+      }
+
+      return current.map((entry, index) => (index === existingIndex
+        ? { ...entry, quantity: entry.quantity + item.quantity }
+        : entry));
+    });
+  };
+
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-100 px-6 py-10">
-        <div className="mx-auto max-w-md rounded-3xl bg-white p-8 text-center shadow-xl">
-          <p className="text-slate-600">Loading session...</p>
-        </div>
-      </div>
-    );
+    return <div className="p-8 dark:bg-stone-950 dark:text-stone-100">Loading session...</div>;
   }
 
-  if (user) {
-    return (
-      <Routes>
-        <Route path="/" element={<Navigate to={rolePaths[user.role]} replace />} />
-        <Route path="/admin" element={<ProtectedRoleRoute user={user} role="admin" onLogout={handleLogout} />} />
-        <Route path="/vendor" element={<ProtectedRoleRoute user={user} role="vendor" onLogout={handleLogout} />} />
-        <Route path="/client" element={<ProtectedRoleRoute user={user} role="client" onLogout={handleLogout} />} />
-        <Route path="*" element={<Navigate to={rolePaths[user.role]} replace />} />
-      </Routes>
-    );
-  }
+  const isArabic = language === "ar";
+  const t = (english: string, arabic: string) => (isArabic ? arabic : english);
+  const languageLabelFr = "FR";
+  const languageLabelAr = "AR";
+  const isStorefrontRoute = location.pathname === "/"
+    || location.pathname === "/parfumes"
+    || location.pathname === "/offres"
+    || location.pathname === "/marques"
+    || location.pathname === "/packs";
+  const controlsTopClass = isStorefrontRoute ? "top-16" : "top-3";
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={(
-          <AuthScreen
-            mode={mode}
-            setMode={(nextMode) => {
-              setMode(nextMode);
-              setMessage("");
-            }}
-            form={form}
-            updateField={updateField}
-            submitting={submitting}
-            message={message}
-            handleSubmit={handleSubmit}
-          />
-        )}
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <LanguageContext.Provider value={{ language, setLanguage, isArabic, t }}>
+      {!isStorefrontRoute && (
+        <div className={`fixed left-3 z-50 flex items-center gap-0.5 rounded-full border border-stone-300 bg-white/95 p-0.5 text-[10px] font-semibold text-stone-800 shadow-lg backdrop-blur transition-all ${controlsTopClass}`}>
+          <button
+            type="button"
+            onClick={() => setLanguage("fr")}
+            className={`rounded-full px-2 py-0.5 transition ${language === "fr" ? "bg-stone-900 text-white" : "text-stone-700"}`}
+            aria-pressed={language === "fr"}
+          >
+            {languageLabelFr}
+          </button>
+          <button
+            type="button"
+            onClick={() => setLanguage("ar")}
+            className={`rounded-full px-2 py-0.5 transition ${language === "ar" ? "bg-stone-900 text-white" : "text-stone-700"}`}
+            aria-pressed={language === "ar"}
+          >
+            {languageLabelAr}
+          </button>
+        </div>
+      )}
+
+      <Routes>
+        <Route
+          path="/"
+          element={<StorefrontPage
+            mode="home"
+            cartItems={cartItems}
+            isCartOpen={isCartOpen}
+            setIsCartOpen={setIsCartOpen}
+            isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
+            hideEmptyCartPrompt={hideEmptyCartPrompt}
+            setHideEmptyCartPrompt={setHideEmptyCartPrompt}
+          />}
+        />
+        <Route
+          path="/parfumes"
+          element={<StorefrontPage
+            mode="parfumes"
+            cartItems={cartItems}
+            isCartOpen={isCartOpen}
+            setIsCartOpen={setIsCartOpen}
+            isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
+            hideEmptyCartPrompt={hideEmptyCartPrompt}
+            setHideEmptyCartPrompt={setHideEmptyCartPrompt}
+          />}
+        />
+        <Route
+          path="/offres"
+          element={<StorefrontPage
+            mode="offres"
+            cartItems={cartItems}
+            isCartOpen={isCartOpen}
+            setIsCartOpen={setIsCartOpen}
+            isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
+            hideEmptyCartPrompt={hideEmptyCartPrompt}
+            setHideEmptyCartPrompt={setHideEmptyCartPrompt}
+          />}
+        />
+        <Route
+          path="/marques"
+          element={<StorefrontPage
+            mode="marques"
+            cartItems={cartItems}
+            isCartOpen={isCartOpen}
+            setIsCartOpen={setIsCartOpen}
+            isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
+            hideEmptyCartPrompt={hideEmptyCartPrompt}
+            setHideEmptyCartPrompt={setHideEmptyCartPrompt}
+          />}
+        />
+        <Route
+          path="/packs"
+          element={<StorefrontPage
+            mode="packs"
+            cartItems={cartItems}
+            isCartOpen={isCartOpen}
+            setIsCartOpen={setIsCartOpen}
+            isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
+            hideEmptyCartPrompt={hideEmptyCartPrompt}
+            setHideEmptyCartPrompt={setHideEmptyCartPrompt}
+          />}
+        />
+        <Route path="/pack/:packId" element={<PackOrderPage onAddToCart={handleAddToCart} />} />
+        <Route path="/perfume/:slug" element={<PerfumeOrderPage onAddToCart={handleAddToCart} />} />
+        <Route path="/admin/login" element={user ? <Navigate to="/admin" replace /> : <AdminLogin onLogin={handleLogin} />} />
+        <Route path="/admin" element={user ? <AdminDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/admin/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </LanguageContext.Provider>
   );
 }
 

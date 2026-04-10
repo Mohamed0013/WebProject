@@ -1,14 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
 const apiProxyTarget = process.env.VITE_PROXY_TARGET || 'http://nginx'
 
-export default defineConfig({
-  base: '/spa/',
-  plugins: [react()],
+export default defineConfig(({ command }) => ({
+  // Use root path in dev so http://localhost:5173/ stays on "/".
+  base: command === 'serve' ? '/' : '/spa/',
+  plugins: [react(), basicSsl()],
   server: {
-    host: '0.0.0.0',  // must bind to all interfaces
-    port: 5173,
+    host: true,
+    port: 5174,
+    strictPort: true,
+    https: {},
     proxy: {
       '/api': {
         target: apiProxyTarget,
@@ -33,4 +37,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))
