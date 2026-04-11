@@ -1,421 +1,54 @@
-**the plan**
-React (Vite)  →  Nginx
-Laravel API   →  PHP-FPM
-Database      →  MySQL
+# WebProject Deployment (GitHub + Phone Access)
 
-
-
-**Containers**
-
-app (Laravel)
-
-nginx
-
-mysql
-
-node (for React dev)
-
-
-**Structure**
-
-house-market/
-│
-├── backend/
-├── frontend/
-├── docker/
-│   ├── nginx/
-│   └── php/
-├── docker-compose.yml
-
-
-
-**--------------Backen------------------**
-
-**Run**
-
-docker compose up -d --build
-docker compose exec app bash
-composer create-project laravel/laravel .
-
-
-**change in .env file in backend**
-
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_PORT=3306
-DB_DATABASE=house_market
-DB_USERNAME=laravel
-DB_PASSWORD=laravel
-
-
-**Return back to the app with exec and**
-
-php artisan migrate
-
-chmod -R 775 storage
-chmod -R 775 bootstrap/cache
-chown -R www-data:www-data storage
-chown -R www-data:www-data bootstrap/cache
-
-**Now open**
-
-http://localhost:8000
-
-
-**--------------Frontend------------------**
-
-docker compose exec node npm create vite@latest .
-
-# if it does not work enter the container and run npm install and npm run dev
-
-**Connecting them**
-npm install axios
-npm install --save-dev @types/axios
-
-# Create api.ts file :
-import axios from "axios";
-
-// Create an Axios instance
-const api = axios.create({
-  baseURL: "http://localhost:8000/api", // Laravel API
-  withCredentials: true,                 // needed for Sanctum auth
-});
-
-export default api;
-
-# Create types.ts file :
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  // add other fields returned by your API
-}
-
-
-**--------------Authentication-----------**
-
-docker compose exec app bash
-
-composer require laravel/sanctum
-composer require spatie/laravel-permission
-docker compose exec app bash
-php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
-php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
-
-# This is gonna Creates config/sanctum.php and config/permission.php and Creates migrations for roles & permissions
-
-php artisan migrate
-
-**You now have:**
-
--users table
-
--roles and permissions tables
-
--personal_access_tokens table (Sanctum)
-
-
-**In backend/app/Http/Kernel.php**
-
-'api' => [
-    \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class, // add this
-    'throttle:api',
-    \Illuminate\Routing\Middleware\SubstituteBindings::class,
-],
-
-
-**So here is the Kernel.php file**
-
-<?php
-
-namespace App\Http;
-
-use Illuminate\Foundation\Http\Kernel as HttpKernel;
-
-class Kernel extends HttpKernel
-{
-    /**
-     * The application's global HTTP middleware stack.
-     *
-     * @var array<int, class-string|string>
-     */
-    protected $middleware = [
-        // \App\Http\Middleware\TrustHosts::class,
-        \App\Http\Middleware\TrustProxies::class,
-        \Illuminate\Http\Middleware\HandleCors::class,
-        \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
-        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-        \App\Http\Middleware\TrimStrings::class,
-        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-    ];
-
-    /**
-     * The application's route middleware groups.
-     *
-     * @var array<string, array<int, class-string|string>>
-     */
-    protected $middlewareGroups = [
-        'web' => [
-            \App\Http\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \App\Http\Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ],
-
-        'api' => [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            'throttle:api',
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ],
-    ];
-
-    /**
-     * The application's middleware aliases.
-     *
-     * @var array<string, class-string|string>
-     */
-    protected $middlewareAliases = [
-        'auth' => \App\Http\Middleware\Authenticate::class,
-        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-        'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
-        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
-        'can' => \Illuminate\Auth\Middleware\Authorize::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-        'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
-        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
-        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-    ];
-}
-
-
-**In backend/app/Models/User.php**
-
-use Spatie\Permission\Traits\HasRoles;
-
-class User extends Authenticatable
-{
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
-}
-
-
-**routes/api.php**
-
-use App\Http\Controllers\AuthController;
-
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('user', [AuthController::class, 'user']);
-    Route::post('logout', [AuthController::class, 'logout']);
-});
-
-
-**backend/app/Http/Controllers/AuthController.php**
-
-<?php
-
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-
-class AuthController extends Controller
-{
-    public function register(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|confirmed',
-            'role' => 'required|string|in:guest,admin,vendor,client',
-        ]);
-
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
-
-        $user->assignRole($data['role']);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ]);
-    }
-
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
-
-        $user = User::where('email', $request->email)->first();
-
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
-        }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ]);
-    }
-
-    public function user(Request $request)
-    {
-        return $request->user();
-    }
-
-    public function logout(Request $request)
-    {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json(['message' => 'Logged out']);
-    }
-}
-
-
-
-**src/api.ts**
-
-import axios, { AxiosInstance } from "axios";
-
-const api: AxiosInstance = axios.create({
-  baseURL: "http://localhost:8000/api",
-  withCredentials: true, // needed for cookies / Sanctum
-});
-
-export default api;
-
-
-**src/types.ts**
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  roles: string[];
-}
-
-
-**Install Tailwind CSS**
-
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-
-
-**tailwind.config.js**
-
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./index.html",
-    "./src/**/*.{ts,tsx,js,jsx}",
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-}
-
-
-**src/index.css**
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-
-
-**Make sure index.css is imported in main.tsx**
-
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './index.css'
-
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-)
-
-## GitHub Pages deployment (frontend)
-
-This repository now includes a workflow at:
+This repository already contains two GitHub Actions workflows:
 
 - `.github/workflows/deploy-frontend-gh-pages.yml`
-
-How to deploy:
-
-1. Push your code to the `main` branch.
-2. In GitHub, open **Settings → Pages**.
-3. Set **Build and deployment** source to **GitHub Actions**.
-4. The workflow will build `frontend` and publish it to GitHub Pages.
-
-Notes:
-
-- This deploys the React frontend as a static site.
-- The Laravel backend/API cannot run on GitHub Pages and must be hosted separately.
-
-## Backend deployment (Render)
-
-This repository now includes:
-
-- `backend/Dockerfile`
-- `backend/start-container.sh`
 - `.github/workflows/deploy-backend-render.yml`
 
-### 1) Create a Render Web Service
+## Goal
+Deploy frontend + backend so the app works from phone exactly like desktop using public URLs.
 
-1. In Render, create a new **Web Service** from this repository.
-2. Set **Root Directory** to `backend`.
-3. Render will use the included `backend/Dockerfile`.
+## 1) Frontend (GitHub Pages)
+1. In GitHub: **Settings → Pages**.
+2. Set **Source** to **GitHub Actions**.
+3. In GitHub repo variables, add:
+   - `VITE_API_BASE_URL=https://<your-render-backend-domain>/api`
+4. Push to `main` (or run workflow manually in **Actions**).
 
-### 2) Configure backend environment variables (Render)
+Result: frontend is live at:
+`https://<github-username>.github.io/WebProject/`
 
-Set these values in Render:
+## 2) Backend (Render)
+1. Create a Render **Web Service** from this repository.
+2. Set **Root Directory** = `backend`.
+3. Render will build from `backend/Dockerfile`.
 
+Set these Render environment variables:
 - `APP_ENV=production`
 - `APP_DEBUG=false`
+- `APP_KEY=<generated key>`
 - `APP_URL=https://<your-render-backend-domain>`
-- `APP_KEY=<generate with: php artisan key:generate --show>`
-- `DB_CONNECTION=mysql` (or `sqlite` if you prefer)
-- `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (for MySQL)
-- `RUN_MIGRATIONS=true` (set to run `php artisan migrate --force` on startup)
+- `RUN_MIGRATIONS=true`
+- `DB_CONNECTION=<sqlite or mysql>`
+- `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (if MySQL)
+- `SANCTUM_STATEFUL_DOMAINS=<github-username>.github.io`
+- `CORS_ALLOWED_ORIGINS=https://<github-username>.github.io`
 
-Optional for frontend auth/API access:
+## 3) Connect GitHub to backend deploy
+1. In Render, create a **Deploy Hook** URL.
+2. In GitHub repository secrets, add:
+   - `RENDER_DEPLOY_HOOK_URL=<your-render-deploy-hook-url>`
 
-- `SANCTUM_STATEFUL_DOMAINS=<your-github-pages-domain>`
+Now any push to `main` touching `backend/**` triggers backend deployment.
 
-### 3) Enable GitHub-triggered backend deploy
+## 4) Phone access checklist
+- Open frontend URL on phone browser:
+  - `https://<github-username>.github.io/WebProject/`
+- Frontend calls backend over internet using `VITE_API_BASE_URL`.
+- Backend CORS is configured via `CORS_ALLOWED_ORIGINS`.
+- API/auth uses bearer tokens, so no localhost dependency.
 
-Add repository secret:
-
-- `RENDER_DEPLOY_HOOK_URL` (from Render Deploy Hook)
-
-Then pushes to `main` that change `backend/**` trigger:
-
-- `.github/workflows/deploy-backend-render.yml`
-
-### 4) Point frontend to deployed backend API
-
-Add repository variable in GitHub:
-
-- `VITE_API_BASE_URL=https://<your-render-backend-domain>/api`
-
-The frontend Pages workflow reads this variable when building.
+## Notes
+- GitHub Pages hosts frontend only (static).
+- Backend must stay on Render (or equivalent public host).
+- After first setup, deployment updates are fully GitHub-driven.
