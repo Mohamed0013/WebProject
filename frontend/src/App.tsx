@@ -331,13 +331,11 @@ type StorefrontPageProps = {
   cartItems: CartItem[];
   isCartOpen: boolean;
   setIsCartOpen: (value: boolean) => void;
-  isMenuOpen: boolean;
-  setIsMenuOpen: (value: boolean) => void;
   hideEmptyCartPrompt: boolean;
   setHideEmptyCartPrompt: (value: boolean) => void;
 };
 
-function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen, setIsMenuOpen, hideEmptyCartPrompt, setHideEmptyCartPrompt }: StorefrontPageProps) {
+function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyCartPrompt, setHideEmptyCartPrompt }: StorefrontPageProps) {
   const { t, language, setLanguage } = useLanguage();
   const location = useLocation();
   const [successMessage, setSuccessMessage] = useState<string>("");
@@ -345,6 +343,17 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<"parfums" | "packs" | "markes">(() => {
+    if (mode === "packs") {
+      return "packs";
+    }
+
+    if (mode === "marques") {
+      return "markes";
+    }
+
+    return "parfums";
+  });
 
   useEffect(() => {
     const state = location.state as { successMessage?: string } | null;
@@ -362,20 +371,32 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredPerfumes = useMemo(() => {
+  useEffect(() => {
+    if (mode === "packs") {
+      setSelectedCategory("packs");
+      return;
+    }
+
+    if (mode === "marques") {
+      setSelectedCategory("markes");
+      return;
+    }
+
+    setSelectedCategory("parfums");
+  }, [mode]);
+
+  const searchedPerfumes = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return perfumes.filter((perfume) => {
       const searchable = [perfume.name, perfume.brand, perfume.short_description, perfume.fragrance_family].join(" ").toLowerCase();
-      const matchesSearch = normalizedSearch.length === 0 || searchable.includes(normalizedSearch);
-      const matchesBrand = selectedBrand.length === 0 || perfume.brand === selectedBrand;
-      return matchesSearch && matchesBrand;
+      return normalizedSearch.length === 0 || searchable.includes(normalizedSearch);
     });
-  }, [perfumes, searchTerm, selectedBrand]);
+  }, [perfumes, searchTerm]);
 
   const offerPerfumes = useMemo(
-    () => filteredPerfumes.filter((perfume) => perfume.discount_percentage > 0 || perfume.is_best_seller || perfume.is_trending),
-    [filteredPerfumes],
+    () => searchedPerfumes.filter((perfume) => perfume.discount_percentage > 0 || perfume.is_best_seller || perfume.is_trending),
+    [searchedPerfumes],
   );
   const offerTickerMessages = useMemo(() => {
     const defaults = [
@@ -424,7 +445,12 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
   }, [offerTickerMessages.length]);
 
   const visiblePerfumes = useMemo(() => {
-    const source = mode === "offres" ? offerPerfumes : filteredPerfumes;
+    const source = mode === "offres" ? offerPerfumes : searchedPerfumes;
+
+    if (selectedCategory === "markes" && selectedBrand.length > 0) {
+      return source.filter((perfume) => perfume.brand === selectedBrand);
+    }
+
     if (mode !== "home") {
       return source;
     }
@@ -436,7 +462,7 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
     featured.sort((a, b) => homeFeaturedSlugs.indexOf(a.slug) - homeFeaturedSlugs.indexOf(b.slug));
 
     return [...featured, ...rest];
-  }, [mode, offerPerfumes, filteredPerfumes]);
+  }, [mode, offerPerfumes, searchedPerfumes, selectedBrand, selectedCategory]);
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const headingByMode: Record<StorefrontPageMode, string> = {
@@ -494,39 +520,14 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
                 type="button"
                 onClick={() => {
                   setIsCartOpen(true);
-                  setIsMenuOpen(false);
                 }}
                 className="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-800 dark:border-stone-600 dark:text-stone-100"
               >
                 {t("Panier", "السلة")}
                 <span className="rounded-full bg-stone-900 px-2 py-0.5 text-[10px] text-white dark:bg-stone-100 dark:text-stone-900">{cartCount}</span>
               </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMenuOpen(!isMenuOpen);
-                  setIsCartOpen(false);
-                }}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 text-stone-800 dark:border-stone-600 dark:text-stone-100"
-                aria-label={t("Ouvrir le menu", "فتح القائمة")}
-              >
-                <svg viewBox="0 0 20 20" className="h-5 w-5" fill="currentColor" aria-hidden="true">
-                  <path d="M3 5h14v2H3V5Zm0 4h14v2H3V9Zm0 4h14v2H3v-2Z" />
-                </svg>
-              </button>
             </div>
           </div>
-
-          {isMenuOpen && (
-            <div className="mt-3 rounded-2xl border border-stone-200 bg-gradient-to-br from-amber-50 via-white to-stone-50 p-2.5 text-sm shadow-md dark:border-stone-700 dark:from-stone-800 dark:via-stone-900 dark:to-stone-800">
-              <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Navigation rapide", "تنقل سريع")}</p>
-              <Link to="/parfumes" onClick={() => setIsMenuOpen(false)} className="mb-1 block rounded-xl border border-transparent px-3 py-2.5 font-medium transition hover:border-amber-200 hover:bg-white hover:shadow-sm dark:hover:border-stone-600 dark:hover:bg-stone-700">{t("Parfumes", "العطور")}</Link>
-              <Link to="/offres" onClick={() => setIsMenuOpen(false)} className="mb-1 block rounded-xl border border-transparent px-3 py-2.5 font-medium transition hover:border-amber-200 hover:bg-white hover:shadow-sm dark:hover:border-stone-600 dark:hover:bg-stone-700">{t("Offres", "العروض")}</Link>
-              <Link to="/packs" onClick={() => setIsMenuOpen(false)} className="mb-1 block rounded-xl border border-transparent px-3 py-2.5 font-medium transition hover:border-amber-200 hover:bg-white hover:shadow-sm dark:hover:border-stone-600 dark:hover:bg-stone-700">{t("Packs", "الباكات")}</Link>
-              <Link to="/marques" onClick={() => setIsMenuOpen(false)} className="block rounded-xl border border-transparent px-3 py-2.5 font-medium transition hover:border-amber-200 hover:bg-white hover:shadow-sm dark:hover:border-stone-600 dark:hover:bg-stone-700">{t("Marques", "الماركات")}</Link>
-            </div>
-          )}
         </div>
 
         {isCartOpen && (
@@ -568,7 +569,6 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
                       to={item.routePath ?? `/perfume/${item.perfumeSlug}`}
                       onClick={() => {
                         setIsCartOpen(false);
-                        setIsMenuOpen(false);
                       }}
                       className="block rounded-xl border border-stone-200 p-3 text-sm transition hover:border-amber-300 hover:bg-amber-50/40 dark:border-stone-700 dark:hover:border-amber-600 dark:hover:bg-stone-800"
                     >
@@ -593,9 +593,32 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
             placeholder={t("Rechercher un parfum, marque, note...", "ابحث عن عطر أو ماركة أو نغمة...")}
             className="w-full rounded-xl border border-stone-300 p-3 text-sm dark:border-stone-600 dark:bg-stone-800"
           />
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("parfums")}
+              className={`rounded-xl border px-2 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition ${selectedCategory === "parfums" ? "border-stone-900 bg-stone-900 text-white dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900" : "border-stone-300 bg-white text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200"}`}
+            >
+              parfums
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("packs")}
+              className={`rounded-xl border px-2 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition ${selectedCategory === "packs" ? "border-stone-900 bg-stone-900 text-white dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900" : "border-stone-300 bg-white text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200"}`}
+            >
+              packs
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("markes")}
+              className={`rounded-xl border px-2 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition ${selectedCategory === "markes" ? "border-stone-900 bg-stone-900 text-white dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900" : "border-stone-300 bg-white text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200"}`}
+            >
+              markes
+            </button>
+          </div>
         </div>
 
-        {mode === "marques" && (
+        {selectedCategory === "markes" && (
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
@@ -617,9 +640,9 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
           </div>
         )}
 
-        {mode !== "packs" && (
+        {selectedCategory !== "packs" && (
         <section className="mt-4">
-          <h1 className="mb-3 text-xl font-semibold sm:text-2xl">{headingByMode[mode]}</h1>
+          <h1 className="mb-3 text-xl font-semibold sm:text-2xl">{selectedCategory === "markes" ? t("Marques", "الماركات") : headingByMode[mode]}</h1>
           {mode === "offres" && (
             <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium leading-6 text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">
               {offersQualityHeader}
@@ -669,7 +692,7 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
         </section>
         )}
 
-        {(mode === "home" || mode === "parfumes" || mode === "packs") && (
+        {selectedCategory === "packs" && (
           <section className="mt-6">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold sm:text-xl">{t("Nos Packs", "باقاتنا")}</h2>
@@ -1800,7 +1823,6 @@ function App() {
   });
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hideEmptyCartPrompt, setHideEmptyCartPrompt] = useState(false);
 
   useEffect(() => {
@@ -1911,8 +1933,6 @@ function App() {
             cartItems={cartItems}
             isCartOpen={isCartOpen}
             setIsCartOpen={setIsCartOpen}
-            isMenuOpen={isMenuOpen}
-            setIsMenuOpen={setIsMenuOpen}
             hideEmptyCartPrompt={hideEmptyCartPrompt}
             setHideEmptyCartPrompt={setHideEmptyCartPrompt}
           />}
@@ -1924,8 +1944,6 @@ function App() {
             cartItems={cartItems}
             isCartOpen={isCartOpen}
             setIsCartOpen={setIsCartOpen}
-            isMenuOpen={isMenuOpen}
-            setIsMenuOpen={setIsMenuOpen}
             hideEmptyCartPrompt={hideEmptyCartPrompt}
             setHideEmptyCartPrompt={setHideEmptyCartPrompt}
           />}
@@ -1937,8 +1955,6 @@ function App() {
             cartItems={cartItems}
             isCartOpen={isCartOpen}
             setIsCartOpen={setIsCartOpen}
-            isMenuOpen={isMenuOpen}
-            setIsMenuOpen={setIsMenuOpen}
             hideEmptyCartPrompt={hideEmptyCartPrompt}
             setHideEmptyCartPrompt={setHideEmptyCartPrompt}
           />}
@@ -1950,8 +1966,6 @@ function App() {
             cartItems={cartItems}
             isCartOpen={isCartOpen}
             setIsCartOpen={setIsCartOpen}
-            isMenuOpen={isMenuOpen}
-            setIsMenuOpen={setIsMenuOpen}
             hideEmptyCartPrompt={hideEmptyCartPrompt}
             setHideEmptyCartPrompt={setHideEmptyCartPrompt}
           />}
@@ -1963,8 +1977,6 @@ function App() {
             cartItems={cartItems}
             isCartOpen={isCartOpen}
             setIsCartOpen={setIsCartOpen}
-            isMenuOpen={isMenuOpen}
-            setIsMenuOpen={setIsMenuOpen}
             hideEmptyCartPrompt={hideEmptyCartPrompt}
             setHideEmptyCartPrompt={setHideEmptyCartPrompt}
           />}
