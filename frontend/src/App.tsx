@@ -341,6 +341,7 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [perfumes, setPerfumes] = useState<Perfume[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
 
@@ -356,9 +357,16 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
 
   useEffect(() => {
     void api.get<Perfume[]>("/perfumes")
-      .then((response) => setPerfumes(response.data))
+      .then((response) => {
+        setPerfumes(response.data);
+        setLoadError(null);
+      })
+      .catch(() => {
+        setPerfumes([]);
+        setLoadError(t("Impossible de charger les parfums. Verifiez la connexion a l'API.", "تعذر تحميل العطور. تحقق من الاتصال بواجهة البرمجة."));
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   const filteredPerfumes = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -632,6 +640,8 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, isMenuOpen
 
           {loading ? (
             <p className="rounded-2xl bg-white p-5 shadow dark:bg-stone-900">{t("Chargement des parfums...", "جاري تحميل العطور...")}</p>
+          ) : loadError ? (
+            <p className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800 shadow dark:border-rose-700/60 dark:bg-rose-900/20 dark:text-rose-200">{loadError}</p>
           ) : visiblePerfumes.length === 0 ? (
             <p className="rounded-2xl bg-white p-5 text-sm text-stone-600 shadow dark:bg-stone-900 dark:text-stone-300">{t("Aucun parfum trouve.", "لم يتم العثور على عطور.")}</p>
           ) : (
