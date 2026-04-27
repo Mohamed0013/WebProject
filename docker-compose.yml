@@ -42,7 +42,7 @@ services:
       MYSQL_USER: laravel
       MYSQL_PASSWORD: laravel
     ports:
-      - "3306:3306"
+      - "3307:3306"  # Changed from 3306:3306 to avoid conflict
     volumes:
       - db_data:/var/lib/mysql
     networks:
