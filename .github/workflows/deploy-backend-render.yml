@@ -7,9 +7,12 @@ on:
       - 'backend/**'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render deploy
-        run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+        run: |
+          curl -fsSL "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" || { echo "Deploy hook failed"; exit 1; }
