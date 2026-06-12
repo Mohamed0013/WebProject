@@ -9,7 +9,6 @@ class PerfumeController extends Controller
     public function index()
     {
         $perfumes = Perfume::query()
-            ->where('is_active', true)
             ->orderBy('name')
             ->get()
             ->map(fn (Perfume $perfume) => $this->serializePerfume($perfume));
@@ -21,7 +20,6 @@ class PerfumeController extends Controller
     {
         $perfume = Perfume::query()
             ->where('slug', $slug)
-            ->where('is_active', true)
             ->firstOrFail();
 
         return response()->json($this->serializePerfume($perfume));
@@ -64,7 +62,6 @@ class PerfumeController extends Controller
             'authenticity_guarantee' => $perfume->authenticity_guarantee ?? '100% authentic fragrance guaranteed',
             'is_best_seller' => (bool) ($perfume->is_best_seller ?? false),
             'is_trending' => (bool) ($perfume->is_trending ?? false),
-            'discount_percentage' => (int) ($perfume->discount_percentage ?? 0),
             'similar_slugs' => $perfume->similar_slugs ?? [],
         ];
     }

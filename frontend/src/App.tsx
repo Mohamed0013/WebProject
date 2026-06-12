@@ -6,7 +6,6 @@ import type { AdminOrder, OrderResponse, Perfume, User } from "./types";
 import APLogo from "./pictures/AP.png";
 import BlueImage from "./pictures/Blue.jpeg";
 import BossImage from "./pictures/Boss.jpeg";
-import ErbaPuraImage from "./pictures/ErbaPura.jpeg";
 import GioImage from "./pictures/Gio.jpeg";
 import ImaginationImage from "./pictures/Imagination.jpeg";
 import InvictusImage from "./pictures/Invectus.jpeg";
@@ -16,7 +15,6 @@ import PackBlackMarbleImage from "./pictures/pack3/pack-black-marble.png";
 import PackDarkSignatureImage from "./pictures/pack3/pack-dark-signature.png";
 import PackEliteHarmonyImage from "./pictures/pack3/pack-elite-harmony.png";
 import PackHarmonieImage from "./pictures/pack3/pack-harmonie.png";
-import PackLuxuryTrioImage from "./pictures/pack3/pack-luxury-trio.png";
 import WantedImage from "./pictures/Wanted.jpeg";
 import YImage from "./pictures/Y.jpeg";
 import SauvageImage from "./pictures/sauvage.jpeg";
@@ -41,7 +39,7 @@ const languageStorageKey = "perfume-language";
 
 type Language = "fr" | "ar";
 
-type PurchaseOption = "single_30ml" | "single_60ml" | "pack_30ml_x4" | "pack_50ml_x3";
+type PurchaseOption = "pack_30ml_x2" | "pack_30ml_x4" | "single_50ml" | "pack_50ml_x3" | "pack_20ml_x5";
 
 type CartItem = {
   key: string;
@@ -56,10 +54,11 @@ type CartItem = {
 };
 
 const purchaseOptionLabels: Record<PurchaseOption, { fr: string; ar: string }> = {
-  single_30ml: { fr: "30ml (1 bouteille)", ar: "30 مل (زجاجة واحدة)" },
-  single_60ml: { fr: "60ml (1 bouteille)", ar: "60 مل (زجاجة واحدة)" },
-  pack_30ml_x4: { fr: "Pack 30ml x4 (150 DH)", ar: "باك 30 مل × 4 (150 درهم)" },
-  pack_50ml_x3: { fr: "Pack 50ml x3 (180 DH)", ar: "باك 50 مل × 3 (180 درهم)" },
+  pack_30ml_x2: { fr: "Pack 30ml x2 (69 DH)", ar: "باك 30 مل × 2 (69 درهم)" },
+  pack_30ml_x4: { fr: "Pack 30ml x4 + 1 gratuit (119 DH)", ar: "باك 30 مل × 4 + 1 مجاني (119 درهم)" },
+  single_50ml: { fr: "50ml (1 bouteille) 69 DH", ar: "50 مل (زجاجة واحدة) 69 درهم" },
+  pack_50ml_x3: { fr: "Pack 50ml x3 (149 DH)", ar: "باك 50 مل × 3 (149 درهم)" },
+  pack_20ml_x5: { fr: "Pack 20ml x4 + 1 gratuit (139 DH)", ar: "باك 20 مل × 4 + 1 مجاني (139 درهم)" },
 };
 
 const ingredientArabicMap: Record<string, string> = {
@@ -129,12 +128,9 @@ const ingredientArabicMap: Record<string, string> = {
 
 const perfumeImageBySlug: Record<string, string> = {
   "acqua-di-gio": GioImage,
-  "acqua-di-gio-homme": GioImage,
-  "blue-seduction": BlueImage,
-  "blue-seduction-men": BlueImage,
+  "bleu-chanel": BlueImage,
   "boss-bottled": BossImage,
   "dolce-gabbana-light-blue": LightBlueImage,
-  "erba-pura": ErbaPuraImage,
   imagination: ImaginationImage,
   invictus: InvictusImage,
   "l-homme-ysl": LHommeImage,
@@ -146,9 +142,9 @@ const perfumeImageBySlug: Record<string, string> = {
 };
 
 const homeFeaturedSlugs = [
-  "erba-pura",
   "imagination",
-  "dolce-gabbana-light-blue",
+  "y-eau-de-parfum",
+  "boss-bottled",
   "versace-eros",
 ];
 
@@ -169,74 +165,60 @@ type PackShowcaseItem = {
 
 const packShowcaseItems: PackShowcaseItem[] = [
   {
-    id: "pack-signature-3x50",
+    id: "pack-30ml-duo",
     image: PackDarkSignatureImage,
+    perfumeSlug: "boss-bottled",
+    purchaseOption: "pack_30ml_x2",
+    includedSlugs: ["boss-bottled", "invictus"],
+    titleFr: "Pack 30ml Duo",
+    titleAr: "باك 30مل ثنائي",
+    descriptionFr: "Deux parfums 30ml pour demarrer avec 69 DH.",
+    descriptionAr: "عطران 30مل للانطلاق بسعر 69 درهم.",
+    detailsFr: "Choisissez deux parfums differents au format 30ml. Offre ideale pour tester ou offrir.",
+    detailsAr: "اختَر عطرين مختلفين بحجم 30مل. عرض مثالي للتجربة أو الهدية.",
+    price: 69,
+  },
+  {
+    id: "pack-30ml-quad",
+    image: PackHarmonieImage,
     perfumeSlug: "versace-eros",
-    purchaseOption: "pack_50ml_x3",
-    includedSlugs: ["versace-eros", "dior-sauvage", "imagination"],
-    titleFr: "Pack Signature 3x50ml",
-    titleAr: "باك سيغنيتشر 3×50مل",
-    descriptionFr: "Selection orientale boisee pour la soiree, projection forte et tenue durable.",
-    descriptionAr: "تشكيلة شرقية خشبية للمساء، فوحان قوي وثبات ممتاز.",
-    detailsFr: "Ce pack reunit trois parfums puissants pour les sorties et les occasions: style charismatique, bonne diffusion et tenue stable au fil des heures.",
-    detailsAr: "هذا الباك يجمع ثلاثة عطور قوية للخروجات والمناسبات: طابع كاريزمي، فوحان واضح وثبات جيد لساعات.",
-    price: 180,
+    purchaseOption: "pack_30ml_x4",
+    includedSlugs: ["versace-eros", "dior-sauvage", "y-eau-de-parfum"],
+    titleFr: "Pack 30ml 3+1",
+    titleAr: "باك 30مل 3+1",
+    descriptionFr: "3 parfums 30ml + 1 gratuit pour 119 DH.",
+    descriptionAr: "3 عطور 30مل + واحد مجاني بـ 119 درهم.",
+    detailsFr: "Pack 30ml avec un flacon offert. Parfait pour varier chaque jour.",
+    detailsAr: "باك 30مل مع زجاجة مجانية. مثالي لتبديل الروائح يوميا.",
+    price: 119,
   },
   {
-    id: "pack-fresh-3x50",
-    image: PackLuxuryTrioImage,
-    perfumeSlug: "acqua-di-gio",
-    purchaseOption: "pack_50ml_x3",
-    includedSlugs: ["acqua-di-gio", "blue-seduction", "dolce-gabbana-light-blue"],
-    titleFr: "Pack Fresh 3x50ml",
-    titleAr: "باك فريش 3×50مل",
-    descriptionFr: "Trois profils frais et propres pour la journee et le quotidien.",
-    descriptionAr: "ثلاث روائح منعشة ونظيفة للنهار والاستخدام اليومي.",
-    detailsFr: "Un pack ideal pour la chaleur et le quotidien: accords marins, citrus et aromatiques pour rester propre et elegant toute la journee.",
-    detailsAr: "باك مثالي للأجواء الحارة والاستعمال اليومي: نغمات بحرية وحمضية وعطرية لإحساس نظيف وأنيق طوال اليوم.",
-    price: 180,
-  },
-  {
-    id: "pack-elite-3x50",
+    id: "pack-50ml-trio",
     image: PackEliteHarmonyImage,
     perfumeSlug: "imagination",
     purchaseOption: "pack_50ml_x3",
-    includedSlugs: ["imagination", "erba-pura", "y-eau-de-parfum"],
-    titleFr: "Pack Elite 3x50ml",
-    titleAr: "باك إيليت 3×50مل",
-    descriptionFr: "Compositions haut de gamme inspirees des best-sellers internationaux.",
-    descriptionAr: "تركيبات عالية الجودة مستوحاة من أكثر العطور العالمية مبيعا.",
-    detailsFr: "Selection premium pour clients exigeants: profils modernes et luxueux, parfaits pour une image haut de gamme au quotidien et en soiree.",
-    detailsAr: "تشكيلة بريميوم للزبناء الباحثين عن الجودة: روائح عصرية وفاخرة مناسبة للصورة الراقية يوميا وفي المساء.",
-    price: 180,
+    includedSlugs: ["imagination", "l-homme-ysl", "acqua-di-gio"],
+    titleFr: "Pack 50ml Trio",
+    titleAr: "باك 50مل ثلاثي",
+    descriptionFr: "3 parfums 50ml differents pour 149 DH.",
+    descriptionAr: "3 عطور 50مل مختلفة بـ 149 درهم.",
+    detailsFr: "Trois parfums 50ml pour un choix complet au quotidien.",
+    detailsAr: "ثلاث عطور 50مل لاختيارات يومية متكاملة.",
+    price: 149,
   },
   {
-    id: "pack-harmonie-4x30",
-    image: PackHarmonieImage,
-    perfumeSlug: "erba-pura",
-    purchaseOption: "pack_50ml_x3",
-    includedSlugs: ["erba-pura", "boss-bottled", "invictus"],
-    titleFr: "Pack Harmonie 3x50ml",
-    titleAr: "باك هارموني 3×50مل",
-    descriptionFr: "Trois parfums polyvalents pour varier entre bureau, sorties et weekend.",
-    descriptionAr: "ثلاث عطور متعددة الاستعمال بين المكتب والخروجات وعطلة نهاية الأسبوع.",
-    detailsFr: "Le meilleur choix pour tester plusieurs styles dans un seul achat: 3 parfums en format 50ml pour alterner facilement selon votre programme.",
-    detailsAr: "أفضل خيار لتجربة أكثر من ستايل بعطـر واحد: 3 عطور بحجم 50مل لتغيير الرائحة بسهولة حسب برنامجك اليومي.",
-    price: 180,
-  },
-  {
-    id: "pack-black-marble-4x30",
+    id: "pack-20ml-five",
     image: PackBlackMarbleImage,
-    perfumeSlug: "dior-sauvage",
-    purchaseOption: "pack_50ml_x3",
-    includedSlugs: ["dior-sauvage", "versace-eros", "l-homme-ysl"],
-    titleFr: "Pack Black Marble 3x50ml",
-    titleAr: "باك بلاك ماربل 3×50مل",
-    descriptionFr: "Pack premium a caractere intense, ideal pour amateurs de parfums puissants.",
-    descriptionAr: "باك بريميوم بطابع قوي، مثالي لمحبي العطور الثقيلة والفواحة.",
-    detailsFr: "Pack a caractere fort et masculin: parfait pour ceux qui aiment une empreinte olfactive remarquee avec une bonne tenue.",
-    detailsAr: "باك بطابع قوي ورجولي: مناسب لمحبي العطور ذات الحضور الواضح والثبات الجيد.",
-    price: 180,
+    perfumeSlug: "bleu-chanel",
+    purchaseOption: "pack_20ml_x5",
+    includedSlugs: ["bleu-chanel", "stronger-with-you", "invictus"],
+    titleFr: "Pack 20ml 4+1",
+    titleAr: "باك 20مل 4+1",
+    descriptionFr: "4 parfums 20ml + 1 gratuit pour 139 DH.",
+    descriptionAr: "4 عطور 20مل + واحد مجاني بـ 139 درهم.",
+    detailsFr: "Pack compact 20ml avec un flacon offert, facile a transporter.",
+    detailsAr: "باك 20مل مريح للحمل مع زجاجة مجانية.",
+    price: 139,
   },
 ];
 
@@ -324,7 +306,19 @@ function Currency({ amount }: { amount: number }) {
   return <>{new Intl.NumberFormat(locale, { style: "currency", currency: "MAD" }).format(amount)}</>;
 }
 
-type StorefrontPageMode = "home" | "parfumes" | "offres" | "marques" | "packs";
+function FullScreenLoader({ label }: { label: string }) {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="flex flex-col items-center gap-4 rounded-3xl border border-stone-200 bg-white/90 px-6 py-5 shadow-lg dark:border-stone-700 dark:bg-stone-900/90">
+        <div className="relative flex h-12 w-12 items-center justify-center">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300/60" />
+          <span className="inline-flex h-12 w-12 animate-spin rounded-full border-2 border-amber-300 border-t-amber-700" />
+        </div>
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-700 dark:text-stone-200">{label}</p>
+      </div>
+    </div>
+  );
+}
 
 type StorefrontPageProps = {
   mode: StorefrontPageMode;
@@ -395,26 +389,21 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
   }, [perfumes, searchTerm]);
 
   const offerPerfumes = useMemo(
-    () => searchedPerfumes.filter((perfume) => perfume.discount_percentage > 0 || perfume.is_best_seller || perfume.is_trending),
+    () => searchedPerfumes.filter((perfume) => perfume.is_best_seller || perfume.is_trending),
     [searchedPerfumes],
   );
   const offerTickerMessages = useMemo(() => {
     const defaults = [
-      t("Pack 4 parfums 30ml a 150 DH", "باك 4 عطور 30مل بـ 150 درهم"),
-      t("Pack 3 parfums 50ml a 180 DH", "باك 3 عطور 50مل بـ 180 درهم"),
-      t("Livraison rapide partout au Maroc", "توصيل سريع في كل المغرب"),
+      t("Pack 30ml x2 a 69 DH", "باك 30مل × 2 بـ 69 درهم"),
+      t("Pack 30ml 3+1 a 119 DH", "باك 30مل 3+1 بـ 119 درهم"),
+      t("Pack 50ml x3 a 149 DH", "باك 50مل × 3 بـ 149 درهم"),
+      t("Pack 20ml 4+1 a 139 DH", "باك 20مل 4+1 بـ 139 درهم"),
+      t("Livraison gratuite partout au Maroc", "توصيل مجاني في كل المغرب"),
     ];
 
     const dynamicOffers = offerPerfumes
       .slice(0, 8)
       .map((perfume) => {
-        if (perfume.discount_percentage > 0) {
-          return t(
-            `${perfume.name}: -${perfume.discount_percentage}% aujourd'hui`,
-            `${perfume.name}: خصم ${perfume.discount_percentage}% اليوم`,
-          );
-        }
-
         if (perfume.is_best_seller) {
           return t(`Best seller: ${perfume.name}`, `الأكثر مبيعاً: ${perfume.name}`);
         }
@@ -656,7 +645,7 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
           )}
 
           {loading ? (
-            <p className="rounded-2xl bg-white p-5 shadow dark:bg-stone-900">{t("Chargement des parfums...", "جاري تحميل العطور...")}</p>
+            <FullScreenLoader label={t("Chargement des parfums...", "جاري تحميل العطور...")} />
           ) : visiblePerfumes.length === 0 ? (
             <p className="rounded-2xl bg-white p-5 text-sm text-stone-600 shadow dark:bg-stone-900 dark:text-stone-300">{t("Aucun parfum trouve.", "لم يتم العثور على عطور.")}</p>
           ) : (
@@ -667,9 +656,6 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
                   to={`/perfume/${perfume.slug}`}
                   className="group relative block overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-stone-700 dark:bg-stone-900"
                 >
-                  {perfume.discount_percentage > 0 && (
-                    <span className="absolute left-2 top-2 z-10 rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow">-{perfume.discount_percentage}%</span>
-                  )}
                   <div className="aspect-[4/3] overflow-hidden bg-stone-200 dark:bg-stone-800">
                     {resolvePerfumeImage(perfume) ? (
                       <img src={resolvePerfumeImage(perfume) ?? ""} alt={perfume.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
@@ -800,7 +786,7 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
   };
 
   if (loading) {
-    return <div className="p-8 text-stone-900 dark:bg-stone-950 dark:text-stone-100">{t("Chargement du pack...", "جاري تحميل الباك...")}</div>;
+    return <FullScreenLoader label={t("Chargement du pack...", "جاري تحميل الباك...")} />;
   }
 
   if (!pack) {
@@ -1012,7 +998,7 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
     customer_address: "",
     customer_phone: "",
     quantity: 1,
-    purchase_option: "single_60ml",
+    purchase_option: "single_50ml",
   });
 
   useEffect(() => {
@@ -1056,7 +1042,6 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
       reviews: perfume.reviews,
       isBestSeller: perfume.is_best_seller,
       isTrending: perfume.is_trending,
-      discountPercentage: perfume.discount_percentage,
       similarSlugs: perfume.similar_slugs,
     };
   }, [perfume]);
@@ -1076,7 +1061,7 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
       return;
     }
 
-    setForm((current) => ({ ...current, purchase_option: preselectedPurchaseOption ?? "single_60ml" }));
+    setForm((current) => ({ ...current, purchase_option: preselectedPurchaseOption ?? "single_50ml" }));
   }, [productMeta, preselectedPurchaseOption]);
 
   const mediaItems = useMemo(() => {
@@ -1112,10 +1097,11 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
     }
 
     const prices: Record<PurchaseOption, number> = {
-      single_30ml: perfume.price * 0.6,
-      single_60ml: perfume.price,
-      pack_30ml_x4: 150,
-      pack_50ml_x3: 180,
+      pack_30ml_x2: 69,
+      pack_30ml_x4: 119,
+      single_50ml: 69,
+      pack_50ml_x3: 149,
+      pack_20ml_x5: 139,
     };
 
     return prices[form.purchase_option];
@@ -1210,7 +1196,7 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
   };
 
   if (loading) {
-    return <div className="p-8 text-stone-900 dark:bg-stone-950 dark:text-stone-100">{t("Loading perfume...", "جاري تحميل العطر...")}</div>;
+    return <FullScreenLoader label={t("Loading perfume...", "جاري تحميل العطر...")} />;
   }
 
   if (!perfume) {
@@ -1243,9 +1229,6 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
               <div className="flex flex-wrap items-center gap-2">
                 {productMeta.isBestSeller && <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-900">{t("Best Seller", "الأكثر مبيعاً")}</span>}
                 {productMeta.isTrending && <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">{t("Trending", "الأكثر رواجاً")}</span>}
-                {productMeta.discountPercentage > 0 && (
-                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">{t(`-${productMeta.discountPercentage}% offer`, `خصم ${productMeta.discountPercentage}%`)}</span>
-                )}
               </div>
 
               <Link to="/" className="text-sm text-amber-700 hover:underline dark:text-amber-300">{t("Back to catalog", "العودة إلى الكتالوج")}</Link>

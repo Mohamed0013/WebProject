@@ -9,10 +9,11 @@ use Illuminate\Http\Request;
 class OrderController extends Controller
 {
     private const PURCHASE_OPTION_PRICING = [
-        'single_30ml' => ['type' => 'multiplier', 'value' => 0.6],
-        'single_60ml' => ['type' => 'multiplier', 'value' => 1.0],
-        'pack_30ml_x4' => ['type' => 'fixed', 'value' => 150.0],
-        'pack_50ml_x3' => ['type' => 'fixed', 'value' => 180.0],
+        'pack_30ml_x2' => ['type' => 'fixed', 'value' => 69.0],
+        'pack_30ml_x4' => ['type' => 'fixed', 'value' => 119.0],
+        'single_50ml' => ['type' => 'fixed', 'value' => 69.0],
+        'pack_50ml_x3' => ['type' => 'fixed', 'value' => 149.0],
+        'pack_20ml_x5' => ['type' => 'fixed', 'value' => 139.0],
     ];
 
     public function index(Request $request)
@@ -38,7 +39,7 @@ class OrderController extends Controller
             'customer_address' => 'required|string|max:500',
             'customer_phone' => 'required|string|max:30',
             'quantity' => 'required|integer|min:1|max:100',
-            'purchase_option' => 'required|string|in:single_30ml,single_60ml,pack_30ml_x4,pack_50ml_x3',
+            'purchase_option' => 'required|string|in:pack_30ml_x2,pack_30ml_x4,single_50ml,pack_50ml_x3,pack_20ml_x5',
         ]);
 
         $perfume = Perfume::findOrFail($data['perfume_id']);

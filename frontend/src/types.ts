@@ -45,7 +45,6 @@ export interface Perfume {
   authenticity_guarantee: string;
   is_best_seller: boolean;
   is_trending: boolean;
-  discount_percentage: number;
   similar_slugs: string[];
 }
 
