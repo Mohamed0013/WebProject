@@ -321,7 +321,7 @@ function FullScreenLoader({ label }: { label: string }) {
 }
 
 type StorefrontPageProps = {
-  mode: StorefrontPageMode;
+  mode: StorefrontPageProps;
   cartItems: CartItem[];
   isCartOpen: boolean;
   setIsCartOpen: (value: boolean) => void;
@@ -454,7 +454,7 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
   }, [mode, offerPerfumes, searchedPerfumes, selectedBrand, selectedCategory]);
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const headingByMode: Record<StorefrontPageMode, string> = {
+  const headingByMode: Record<StorefrontPageProps, string> = {
     home: t("Nos parfums", "عطورنا"),
     parfumes: t("Collection parfums", "مجموعة العطور"),
     offres: t("Offres speciales", "العروض الخاصة"),
