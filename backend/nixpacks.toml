@@ -1,7 +1,8 @@
-[build]
-builder = "nixpacks"
-buildCommand = "composer install --no-dev --optimize-autoloader"
+[phases.setup]
+nixPkgs = ["php83", "php83Packages.composer"]
 
-[deploy]
-startCommand = "php artisan serve --host=0.0.0.0 --port=$PORT"
-preDeployCommand = "php artisan migrate --force"
+[phases.install]
+cmds = ["composer install --no-dev --optimize-autoloader"]
+
+[phases.build]
+cmds = []
