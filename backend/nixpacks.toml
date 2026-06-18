@@ -1,8 +1,7 @@
-[phases.setup]
-nixPkgs = ["php83", "php83Packages.composer"]
+[build]
+builder = "nixpacks"
+buildCommand = "composer install --no-dev --optimize-autoloader"
 
-[phases.install]
-cmds = ["composer install --no-dev --optimize-autoloader"]
-
-[phases.build]
-cmds = []
+[deploy]
+startCommand = "php artisan serve --host=0.0.0.0 --port=$PORT"
+preDeployCommand = "php artisan migrate --force"
