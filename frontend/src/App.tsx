@@ -320,8 +320,10 @@ function FullScreenLoader({ label }: { label: string }) {
   );
 }
 
+type StorefrontPageMode = "home" | "parfumes" | "offres" | "marques" | "packs";
+
 type StorefrontPageProps = {
-  mode: StorefrontPageProps;
+  mode: StorefrontPageMode;
   cartItems: CartItem[];
   isCartOpen: boolean;
   setIsCartOpen: (value: boolean) => void;
@@ -454,7 +456,7 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
   }, [mode, offerPerfumes, searchedPerfumes, selectedBrand, selectedCategory]);
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const headingByMode: Record<StorefrontPageProps, string> = {
+  const headingByMode: Record<StorefrontPageMode, string> = {
     home: t("Nos parfums", "عطورنا"),
     parfumes: t("Collection parfums", "مجموعة العطور"),
     offres: t("Offres speciales", "العروض الخاصة"),
