@@ -2,6 +2,14 @@
 builder = "nixpacks"
 buildCommand = "composer install --no-dev --optimize-autoloader"
 
+DB_CONNECTION=pgsql
+DB_HOST=ep-xxx.eu-west-2.aws.neon.tech
+DB_PORT=5432
+DB_DATABASE=dbname
+DB_USERNAME=user
+DB_PASSWORD=password
+DB_SSLMODE=require
+
 [deploy]
 startCommand = "php artisan serve --host=0.0.0.0 --port=$PORT"
 preDeployCommand = "php artisan migrate --force"
