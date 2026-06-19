@@ -1,8 +1,16 @@
 [phases.setup]
-nixPkgs = ["php83", "php83Extensions.pdo_pgsql", "php83Extensions.pgsql"]
+nixPkgs = [
+  "php83",
+  "php83Extensions.pdo_pgsql",
+  "php83Extensions.pgsql",
+  "php83Packages.composer"
+]
 
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader"]
 
 [phases.build]
-cmds = []
+cmds = ["php artisan config:cache"]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
