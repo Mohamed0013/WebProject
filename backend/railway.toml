@@ -3,11 +3,11 @@ builder = "nixpacks"
 buildCommand = "composer install --no-dev --optimize-autoloader"
 
 DB_CONNECTION=pgsql
-DB_HOST=ep-xxx.eu-west-2.aws.neon.tech
+DB_HOST=ep-withered-breeze-abofw3hi-pooler.eu-west-2.aws.neon.tech
 DB_PORT=5432
-DB_DATABASE=dbname
-DB_USERNAME=user
-DB_PASSWORD=password
+DB_DATABASE=neondb
+DB_USERNAME=neondb_owner
+DB_PASSWORD=npg_1ADjM6hsinex
 DB_SSLMODE=require
 
 [deploy]
