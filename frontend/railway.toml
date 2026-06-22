@@ -3,4 +3,4 @@ builder = "nixpacks"
 buildCommand = "npm install && npm run build"
 
 [deploy]
-startCommand = "ls /app && ls /app/dist && caddy file-server --root /app/dist --listen :$PORT"
+startCommand = "find /app -name 'index.html' 2>/dev/null && caddy file-server --root /app/dist --listen :$PORT"
