@@ -11,8 +11,6 @@ import ImaginationImage from "./pictures/Imagination.jpeg";
 import InvictusImage from "./pictures/Invectus.jpeg";
 import LHommeImage from "./pictures/LHOME.jpeg";
 import LightBlueImage from "./pictures/LightBlue.jpeg";
-import PackBlackMarbleImage from "./pictures/pack3/pack-black-marble.png";
-import PackDarkSignatureImage from "./pictures/pack3/pack-dark-signature.png";
 import PackEliteHarmonyImage from "./pictures/pack3/pack-elite-harmony.png";
 import PackHarmonieImage from "./pictures/pack3/pack-harmonie.png";
 import WantedImage from "./pictures/Wanted.jpeg";
