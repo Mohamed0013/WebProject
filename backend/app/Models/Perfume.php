@@ -46,6 +46,7 @@ class Perfume extends Model
         'is_trending',
         'discount_percentage',
         'similar_slugs',
+        'seasons',
         'is_active',
     ];
 
@@ -68,6 +69,7 @@ class Perfume extends Model
             'is_trending' => 'boolean',
             'discount_percentage' => 'integer',
             'similar_slugs' => 'array',
+            'seasons' => 'array',
             'is_active' => 'boolean',
         ];
     }

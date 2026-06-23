@@ -46,6 +46,7 @@ export interface Perfume {
   is_best_seller: boolean;
   is_trending: boolean;
   similar_slugs: string[];
+  seasons?: string[];
 }
 
 export interface OrderResponse {

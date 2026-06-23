@@ -39,7 +39,7 @@ const languageStorageKey = "perfume-language";
 
 type Language = "fr" | "ar";
 
-type PurchaseOption = "pack_30ml_x2" | "pack_30ml_x4" | "single_50ml" | "pack_50ml_x3" | "pack_20ml_x5";
+type PurchaseOption = "pack_30ml_x4" | "single_50ml" | "pack_50ml_x3";
 
 type CartItem = {
   key: string;
@@ -54,11 +54,9 @@ type CartItem = {
 };
 
 const purchaseOptionLabels: Record<PurchaseOption, { fr: string; ar: string }> = {
-  pack_30ml_x2: { fr: "Pack 30ml x2 (69 DH)", ar: "باك 30 مل × 2 (69 درهم)" },
-  pack_30ml_x4: { fr: "Pack 30ml x4 + 1 gratuit (119 DH)", ar: "باك 30 مل × 4 + 1 مجاني (119 درهم)" },
-  single_50ml: { fr: "50ml (1 bouteille) 69 DH", ar: "50 مل (زجاجة واحدة) 69 درهم" },
-  pack_50ml_x3: { fr: "Pack 50ml x3 (149 DH)", ar: "باك 50 مل × 3 (149 درهم)" },
-  pack_20ml_x5: { fr: "Pack 20ml x4 + 1 gratuit (139 DH)", ar: "باك 20 مل × 4 + 1 مجاني (139 درهم)" },
+  pack_30ml_x4: { fr: "Pack 30ml x4 (149 DH)", ar: "باك 30 مل × 4 (149 درهم)" },
+  single_50ml: { fr: "50ml (1 bouteille) 79 DH", ar: "50 مل (زجاجة واحدة) 79 درهم" },
+  pack_50ml_x3: { fr: "Pack 50ml x3 (179 DH)", ar: "باك 50 مل × 3 (179 درهم)" },
 };
 
 const ingredientArabicMap: Record<string, string> = {
@@ -127,7 +125,7 @@ const ingredientArabicMap: Record<string, string> = {
 };
 
 const perfumeImageBySlug: Record<string, string> = {
-  "acqua-di-gio": GioImage,
+  "acquadi-gio": GioImage,
   "bleu-chanel": BlueImage,
   "boss-bottled": BossImage,
   "dolce-gabbana-light-blue": LightBlueImage,
@@ -148,6 +146,16 @@ const homeFeaturedSlugs = [
   "versace-eros",
 ];
 
+type SeasonKey = "all" | "printemps" | "ete" | "automne" | "hiver";
+
+const seasonLabels: Record<SeasonKey, { fr: string; ar: string }> = {
+  all: { fr: "Toutes saisons", ar: "كل الفصول" },
+  printemps: { fr: "Printemps", ar: "الربيع" },
+  ete: { fr: "Été", ar: "الصيف" },
+  automne: { fr: "Automne", ar: "الخريف" },
+  hiver: { fr: "Hiver", ar: "الشتاء" },
+};
+
 type PackShowcaseItem = {
   id: string;
   image: string;
@@ -165,60 +173,32 @@ type PackShowcaseItem = {
 
 const packShowcaseItems: PackShowcaseItem[] = [
   {
-    id: "pack-30ml-duo",
-    image: PackDarkSignatureImage,
-    perfumeSlug: "boss-bottled",
-    purchaseOption: "pack_30ml_x2",
-    includedSlugs: ["boss-bottled", "invictus"],
-    titleFr: "Pack 30ml Duo",
-    titleAr: "باك 30مل ثنائي",
-    descriptionFr: "Deux parfums 30ml pour demarrer avec 69 DH.",
-    descriptionAr: "عطران 30مل للانطلاق بسعر 69 درهم.",
-    detailsFr: "Choisissez deux parfums differents au format 30ml. Offre ideale pour tester ou offrir.",
-    detailsAr: "اختَر عطرين مختلفين بحجم 30مل. عرض مثالي للتجربة أو الهدية.",
-    price: 69,
-  },
-  {
     id: "pack-30ml-quad",
     image: PackHarmonieImage,
     perfumeSlug: "versace-eros",
     purchaseOption: "pack_30ml_x4",
     includedSlugs: ["versace-eros", "dior-sauvage", "y-eau-de-parfum"],
-    titleFr: "Pack 30ml 3+1",
-    titleAr: "باك 30مل 3+1",
-    descriptionFr: "3 parfums 30ml + 1 gratuit pour 119 DH.",
-    descriptionAr: "3 عطور 30مل + واحد مجاني بـ 119 درهم.",
-    detailsFr: "Pack 30ml avec un flacon offert. Parfait pour varier chaque jour.",
-    detailsAr: "باك 30مل مع زجاجة مجانية. مثالي لتبديل الروائح يوميا.",
-    price: 119,
+    titleFr: "Pack 30ml x4",
+    titleAr: "باك 30مل × 4",
+    descriptionFr: "4 parfums 30ml pour 149 DH.",
+    descriptionAr: "4 عطور 30مل بـ 149 درهم.",
+    detailsFr: "Pack de 4 parfums au format 30ml. Parfait pour varier chaque jour.",
+    detailsAr: "باك 4 عطور بحجم 30مل. مثالي لتنويع الروائح يوميا.",
+    price: 149,
   },
   {
     id: "pack-50ml-trio",
     image: PackEliteHarmonyImage,
     perfumeSlug: "imagination",
     purchaseOption: "pack_50ml_x3",
-    includedSlugs: ["imagination", "l-homme-ysl", "acqua-di-gio"],
+    includedSlugs: ["imagination", "l-homme-ysl", "acquadi-gio"],
     titleFr: "Pack 50ml Trio",
     titleAr: "باك 50مل ثلاثي",
-    descriptionFr: "3 parfums 50ml differents pour 149 DH.",
-    descriptionAr: "3 عطور 50مل مختلفة بـ 149 درهم.",
+    descriptionFr: "3 parfums 50ml differents pour 179 DH.",
+    descriptionAr: "3 عطور 50مل مختلفة بـ 179 درهم.",
     detailsFr: "Trois parfums 50ml pour un choix complet au quotidien.",
     detailsAr: "ثلاث عطور 50مل لاختيارات يومية متكاملة.",
-    price: 149,
-  },
-  {
-    id: "pack-20ml-five",
-    image: PackBlackMarbleImage,
-    perfumeSlug: "bleu-chanel",
-    purchaseOption: "pack_20ml_x5",
-    includedSlugs: ["bleu-chanel", "stronger-with-you", "invictus"],
-    titleFr: "Pack 20ml 4+1",
-    titleAr: "باك 20مل 4+1",
-    descriptionFr: "4 parfums 20ml + 1 gratuit pour 139 DH.",
-    descriptionAr: "4 عطور 20مل + واحد مجاني بـ 139 درهم.",
-    detailsFr: "Pack compact 20ml avec un flacon offert, facile a transporter.",
-    detailsAr: "باك 20مل مريح للحمل مع زجاجة مجانية.",
-    price: 139,
+    price: 179,
   },
 ];
 
@@ -339,7 +319,8 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
-  const [selectedCategory, setSelectedCategory] = useState<"parfums" | "packs" | "markes">(() => {
+  const [selectedSeason, setSelectedSeason] = useState<SeasonKey>("all");
+  const [selectedCategory, setSelectedCategory] = useState<"parfums" | "packs" | "markes" | "saisons">(() => {
     if (mode === "packs") {
       return "packs";
     }
@@ -384,11 +365,25 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
   const searchedPerfumes = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return perfumes.filter((perfume) => {
-      const searchable = [perfume.name, perfume.brand, perfume.short_description, perfume.fragrance_family].join(" ").toLowerCase();
-      return normalizedSearch.length === 0 || searchable.includes(normalizedSearch);
-    });
-  }, [perfumes, searchTerm]);
+    let filtered = perfumes;
+
+    // Filter by season if a specific season is selected
+    if (selectedCategory === "saisons" && selectedSeason !== "all") {
+      filtered = filtered.filter((perfume) => {
+        return perfume.seasons && perfume.seasons.includes(selectedSeason);
+      });
+    }
+
+    // Filter by search term
+    if (normalizedSearch.length > 0) {
+      filtered = filtered.filter((perfume) => {
+        const searchable = [perfume.name, perfume.brand, perfume.short_description, perfume.fragrance_family].join(" ").toLowerCase();
+        return searchable.includes(normalizedSearch);
+      });
+    }
+
+    return filtered;
+  }, [perfumes, searchTerm, selectedSeason, selectedCategory]);
 
   const offerPerfumes = useMemo(
     () => searchedPerfumes.filter((perfume) => perfume.is_best_seller || perfume.is_trending),
@@ -396,10 +391,9 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
   );
   const offerTickerMessages = useMemo(() => {
     const defaults = [
-      t("Pack 30ml x2 a 69 DH", "باك 30مل × 2 بـ 69 درهم"),
-      t("Pack 30ml 3+1 a 119 DH", "باك 30مل 3+1 بـ 119 درهم"),
-      t("Pack 50ml x3 a 149 DH", "باك 50مل × 3 بـ 149 درهم"),
-      t("Pack 20ml 4+1 a 139 DH", "باك 20مل 4+1 بـ 139 درهم"),
+      t("50ml a 79 DH", "50 مل بـ 79 درهم"),
+      t("Pack 30ml x4 a 149 DH", "باك 30مل × 4 بـ 149 درهم"),
+      t("Pack 50ml x3 a 179 DH", "باك 50مل × 3 بـ 179 درهم"),
       t("Livraison gratuite partout au Maroc", "توصيل مجاني في كل المغرب"),
     ];
 
@@ -467,6 +461,8 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
     "Nous nous distinguons par la conception de parfums de haute qualite en utilisant des huiles parfumees concentrees et originales. Puissance, projection et tenue de plus de quatre heures.",
     "نتميز عن غيرنا بتصميم عطور بجودة عالية عن طريق استعمال زيوت عطرية مركزة وأصلية. قوة, فوحان, ثبات يدوم لأكثر من أربع ساعات",
   );
+
+  const seasonKeys: SeasonKey[] = ["all", "printemps", "ete", "automne", "hiver"];
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff2d5_0%,_#fef3e2_32%,_#f5f5f4_100%)] px-3 pb-8 pt-3 text-stone-900 dark:bg-[radial-gradient(circle_at_top,_#1f2937_0%,_#111827_45%,_#020617_100%)] dark:text-stone-100 sm:px-6 sm:pt-4">
@@ -584,7 +580,7 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
             placeholder={t("Rechercher un parfum, marque, note...", "ابحث عن عطر أو ماركة أو نغمة...")}
             className="w-full rounded-xl border border-stone-300 p-3 text-sm dark:border-stone-600 dark:bg-stone-800"
           />
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-3 grid grid-cols-4 gap-2">
             <button
               type="button"
               onClick={() => setSelectedCategory("parfums")}
@@ -601,13 +597,35 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
             </button>
             <button
               type="button"
+              onClick={() => setSelectedCategory("saisons")}
+              className={`rounded-xl border px-2 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition ${selectedCategory === "saisons" ? "border-stone-900 bg-stone-900 text-white dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900" : "border-stone-300 bg-white text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200"}`}
+            >
+              {t("saisons", "الفصول")}
+            </button>
+            <button
+              type="button"
               onClick={() => setSelectedCategory("markes")}
               className={`rounded-xl border px-2 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition ${selectedCategory === "markes" ? "border-stone-900 bg-stone-900 text-white dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900" : "border-stone-300 bg-white text-stone-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200"}`}
             >
-              markes
+              marques
             </button>
           </div>
         </div>
+
+        {selectedCategory === "saisons" && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {seasonKeys.map((seasonKey) => (
+              <button
+                key={seasonKey}
+                type="button"
+                onClick={() => setSelectedSeason(seasonKey)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${selectedSeason === seasonKey ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900" : "border border-stone-300 bg-white dark:border-stone-600 dark:bg-stone-900"}`}
+              >
+                {t(seasonLabels[seasonKey].fr, seasonLabels[seasonKey].ar)}
+              </button>
+            ))}
+          </div>
+        )}
 
         {selectedCategory === "markes" && (
           <div className="mt-3 flex flex-wrap gap-2">
@@ -633,7 +651,11 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
 
         {selectedCategory !== "packs" && (
         <section className="mt-4">
-          <h1 className="mb-3 text-xl font-semibold sm:text-2xl">{selectedCategory === "markes" ? t("Marques", "الماركات") : headingByMode[mode]}</h1>
+          <h1 className="mb-3 text-xl font-semibold sm:text-2xl">
+            {selectedCategory === "markes" ? t("Marques", "الماركات") :
+             selectedCategory === "saisons" ? t(seasonLabels[selectedSeason].fr, seasonLabels[selectedSeason].ar) :
+             headingByMode[mode]}
+          </h1>
           {mode === "offres" && (
             <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium leading-6 text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">
               {offersQualityHeader}
@@ -930,13 +952,13 @@ function PerfumePyramid({ perfume }: { perfume: Perfume }) {
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900">
-      <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">{t("Perfume Pyramid", "هرم العطر")}</p>
+      <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">{t("Pyramide du parfum", "هرم العطر")}</p>
       <div className="mt-5 flex flex-col items-center gap-2">
         <div
           className="w-[52%] max-w-[270px] bg-amber-100 px-6 py-4 text-center dark:bg-amber-900/45"
           style={{ clipPath: "polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%)" }}
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-amber-900">{t("Top Notes", "المقدمة")}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-amber-900">{t("Notes de tete", "المقدمة")}</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
             {perfume.top_notes.map((note) => (
               <div key={`top-${note}`} className="flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-stone-900/50">
@@ -951,7 +973,7 @@ function PerfumePyramid({ perfume }: { perfume: Perfume }) {
           className="w-[76%] max-w-[390px] bg-orange-100 px-8 py-4 text-center dark:bg-orange-900/45"
           style={{ clipPath: "polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)" }}
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-orange-900">{t("Heart Notes", "قلب العطر")}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-orange-900">{t("Notes de coeur", "قلب العطر")}</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
             {perfume.heart_notes.map((note) => (
               <div key={`heart-${note}`} className="flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-stone-900/50">
@@ -966,7 +988,7 @@ function PerfumePyramid({ perfume }: { perfume: Perfume }) {
           className="w-full max-w-[520px] bg-rose-100 px-8 py-4 text-center dark:bg-rose-900/45"
           style={{ clipPath: "polygon(4% 0%, 96% 0%, 100% 100%, 0% 100%)" }}
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-rose-900">{t("Base Notes", "القاعدة")}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-rose-900">{t("Notes de fond", "القاعدة")}</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
             {perfume.base_notes.map((note) => (
               <div key={`base-${note}`} className="flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-stone-900/50">
@@ -1074,9 +1096,9 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
     const fallbackImage = resolvePerfumeImage(perfume);
 
     return [
-      { label: "Bottle Front", image: perfume.bottle_images[0] ?? fallbackImage, tone: "from-amber-200 to-amber-50" },
-      { label: "Packaging", image: perfume.packaging_images[0] ?? fallbackImage, tone: "from-rose-200 to-rose-50" },
-      { label: "Lifestyle", image: perfume.lifestyle_images[0] ?? fallbackImage, tone: "from-stone-300 to-stone-100" },
+      { label: "Flacon", image: perfume.bottle_images[0] ?? fallbackImage, tone: "from-amber-200 to-amber-50" },
+      { label: "Emballage", image: perfume.packaging_images[0] ?? fallbackImage, tone: "from-rose-200 to-rose-50" },
+      { label: "Style de vie", image: perfume.lifestyle_images[0] ?? fallbackImage, tone: "from-stone-300 to-stone-100" },
     ];
   }, [perfume]);
 
@@ -1099,11 +1121,9 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
     }
 
     const prices: Record<PurchaseOption, number> = {
-      pack_30ml_x2: 69,
-      pack_30ml_x4: 119,
-      single_50ml: 69,
-      pack_50ml_x3: 149,
-      pack_20ml_x5: 139,
+      pack_30ml_x4: 149,
+      single_50ml: 79,
+      pack_50ml_x3: 179,
     };
 
     return prices[form.purchase_option];
@@ -1180,7 +1200,7 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
 
       navigate("/", {
         replace: true,
-        state: { successMessage: `${response.data.message} Your commande has been created.` },
+        state: { successMessage: `${response.data.message} Votre commande a ete creee.` },
       });
     } catch (error: unknown) {
       if (isAxiosError(error)) {
@@ -1188,9 +1208,9 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
           ? Object.values(error.response.data.errors).flat()[0]
           : undefined;
 
-        setMessage(typeof firstError === "string" ? firstError : error.response?.data?.message || "Order failed.");
+        setMessage(typeof firstError === "string" ? firstError : error.response?.data?.message || "Echec de la commande.");
       } else {
-        setMessage("Order failed.");
+        setMessage("Echec de la commande.");
       }
     } finally {
       setSubmitting(false);
@@ -1198,20 +1218,20 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
   };
 
   if (loading) {
-    return <FullScreenLoader label={t("Loading perfume...", "جاري تحميل العطر...")} />;
+    return <FullScreenLoader label={t("Chargement du parfum...", "جاري تحميل العطر...")} />;
   }
 
   if (!perfume) {
     return (
       <div className="mx-auto max-w-xl p-8 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
-        <p className="text-lg font-medium">Perfume not found.</p>
-        <Link to="/" className="mt-4 inline-flex rounded-full bg-stone-900 px-4 py-2 text-white dark:bg-stone-100 dark:text-stone-900">{t("Back to catalog", "العودة إلى الكتالوج")}</Link>
+        <p className="text-lg font-medium">Parfum introuvable.</p>
+        <Link to="/" className="mt-4 inline-flex rounded-full bg-stone-900 px-4 py-2 text-white dark:bg-stone-100 dark:text-stone-900">{t("Retour au catalogue", "العودة إلى الكتالوج")}</Link>
       </div>
     );
   }
 
   if (!productMeta) {
-    return <div className="p-8 text-stone-900 dark:bg-stone-950 dark:text-stone-100">Loading product details...</div>;
+    return <div className="p-8 text-stone-900 dark:bg-stone-950 dark:text-stone-100">Chargement des details du produit...</div>;
   }
 
   return (
@@ -1223,17 +1243,17 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
               {mediaItems[activeMediaIndex]?.image ? (
                 <img src={mediaItems[activeMediaIndex].image ?? ""} alt={perfume.name} className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full items-center justify-center text-stone-500 dark:text-stone-300">No image</div>
+                <div className="flex h-full items-center justify-center text-stone-500 dark:text-stone-300">Pas d'image</div>
               )}
             </div>
 
             <div className="space-y-4 p-4 sm:space-y-5 sm:p-7">
               <div className="flex flex-wrap items-center gap-2">
-                {productMeta.isBestSeller && <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-900">{t("Best Seller", "الأكثر مبيعاً")}</span>}
-                {productMeta.isTrending && <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">{t("Trending", "الأكثر رواجاً")}</span>}
+                {productMeta.isBestSeller && <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-900">{t("Meilleure vente", "الأكثر مبيعاً")}</span>}
+                {productMeta.isTrending && <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">{t("Tendance", "الأكثر رواجاً")}</span>}
               </div>
 
-              <Link to="/" className="text-sm text-amber-700 hover:underline dark:text-amber-300">{t("Back to catalog", "العودة إلى الكتالوج")}</Link>
+              <Link to="/" className="text-sm text-amber-700 hover:underline dark:text-amber-300">{t("Retour au catalogue", "العودة إلى الكتالوج")}</Link>
               <h1 className="text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100 sm:text-4xl">{perfume.name}</h1>
               <p className="inline-flex w-fit rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-800">
                 {masterQualityLabel(t)}
@@ -1249,12 +1269,12 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
               </button>
 
               <div className="grid gap-3 rounded-2xl bg-stone-50 p-4 text-sm text-stone-700 dark:bg-stone-800 dark:text-stone-200 sm:grid-cols-2">
-                <p><span className="font-semibold">{t("Brand:", "العلامة التجارية:")}</span> {localizePerfumeText(productMeta.brand, isArabic)}</p>
-                <p><span className="font-semibold">{t("Gender:", "الجنس:")}</span> {localizePerfumeText(productMeta.gender, isArabic)}</p>
-                <p><span className="font-semibold">{t("Price:", "السعر:")}</span> <Currency amount={perfume.price} /></p>
+                <p><span className="font-semibold">{t("Marque:", "العلامة التجارية:")}</span> {localizePerfumeText(productMeta.brand, isArabic)}</p>
+                <p><span className="font-semibold">{t("Genre:", "الجنس:")}</span> {localizePerfumeText(productMeta.gender, isArabic)}</p>
+                <p><span className="font-semibold">{t("Prix:", "السعر:")}</span> <Currency amount={perfume.price} /></p>
                 <p><span className="font-semibold">{t("Stock:", "المخزون:")}</span> {localizePerfumeText(productMeta.stockStatus, isArabic)}</p>
-                <p><span className="font-semibold">{t("Fragrance Family:", "العائلة العطرية:")}</span> {localizePerfumeText(productMeta.fragranceFamily, isArabic)}</p>
-                <p><span className="font-semibold">{t("Size Options:", "خيارات الحجم:")}</span> {productMeta.sizes.join(", ")}</p>
+                <p><span className="font-semibold">{t("Famille olfactive:", "العائلة العطرية:")}</span> {localizePerfumeText(productMeta.fragranceFamily, isArabic)}</p>
+                <p><span className="font-semibold">{t("Tailles disponibles:", "خيارات الحجم:")}</span> {productMeta.sizes.join(", ")}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3">
@@ -1280,18 +1300,18 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
           </article>
 
           <article className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
-            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Fragrance Details", "تفاصيل العطر")}</h2>
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Details du parfum", "تفاصيل العطر")}</h2>
             <div className="mt-4 grid gap-3 rounded-2xl bg-stone-50 p-4 text-sm text-stone-700 dark:bg-stone-800 dark:text-stone-200 sm:grid-cols-2">
-              <p><span className="font-semibold">{t("Top Notes:", "المقدمة:")}</span> {perfume.top_notes.map((note) => localizePerfumeNote(note, isArabic)).join(" • ")}</p>
-              <p><span className="font-semibold">{t("Middle Notes:", "قلب العطر:")}</span> {perfume.heart_notes.map((note) => localizePerfumeNote(note, isArabic)).join(" • ")}</p>
-              <p><span className="font-semibold">{t("Base Notes:", "القاعدة:")}</span> {perfume.base_notes.map((note) => localizePerfumeNote(note, isArabic)).join(" • ")}</p>
-              <p><span className="font-semibold">{t("Longevity:", "الثبات:")}</span> {localizePerfumeText(productMeta.longevity, isArabic)}</p>
-              <p><span className="font-semibold">{t("Sillage:", "الفوحان:")}</span> {localizePerfumeText(productMeta.sillage, isArabic)}</p>
-              <p><span className="font-semibold">{t("Origin:", "بلد المنشأ:")}</span> {localizePerfumeText(perfume.country_of_origin, isArabic)}</p>
+              <p><span className="font-semibold">{t("Notes de tete:", "المقدمة:")}</span> {perfume.top_notes.map((note) => localizePerfumeNote(note, isArabic)).join(" • ")}</p>
+              <p><span className="font-semibold">{t("Notes de coeur:", "قلب العطر:")}</span> {perfume.heart_notes.map((note) => localizePerfumeNote(note, isArabic)).join(" • ")}</p>
+              <p><span className="font-semibold">{t("Notes de fond:", "القاعدة:")}</span> {perfume.base_notes.map((note) => localizePerfumeNote(note, isArabic)).join(" • ")}</p>
+              <p><span className="font-semibold">{t("Tenue:", "الثبات:")}</span> {localizePerfumeText(productMeta.longevity, isArabic)}</p>
+              <p><span className="font-semibold">{t("Projete:", "الفوحان:")}</span> {localizePerfumeText(productMeta.sillage, isArabic)}</p>
+              <p><span className="font-semibold">{t("Origine:", "بلد المنشأ:")}</span> {localizePerfumeText(perfume.country_of_origin, isArabic)}</p>
             </div>
 
             <div className="mt-6">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Fragrance Pyramid", "هرم العطر")}</p>
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Pyramide olfactive", "الهرم العطري")}</p>
               <PerfumePyramid perfume={perfume} />
             </div>
           </article>
@@ -1300,15 +1320,15 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
             <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Description", "الوصف")}</h2>
             <p className="mt-4 text-sm leading-7 text-stone-600 dark:text-stone-300">{localizePerfumeText(perfume.description, isArabic)}</p>
             <div className="mt-4 grid gap-3 rounded-2xl bg-amber-50/70 p-4 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-              <p><span className="font-semibold">{t("Vibe:", "الطابع:")}</span> {localizePerfumeText(productMeta.vibe, isArabic)}</p>
-              <p><span className="font-semibold">{t("When to wear:", "وقت الاستخدام:")}</span> {localizePerfumeText(productMeta.whenToWear, isArabic)}</p>
-              <p><span className="font-semibold">{t("Feeling:", "الإحساس:")}</span> {localizePerfumeText(productMeta.feeling, isArabic)}</p>
+              <p><span className="font-semibold">{t("Style:", "الطابع:")}</span> {localizePerfumeText(productMeta.vibe, isArabic)}</p>
+              <p><span className="font-semibold">{t("Quand le porter:", "وقت الاستخدام:")}</span> {localizePerfumeText(productMeta.whenToWear, isArabic)}</p>
+              <p><span className="font-semibold">{t("Sensation:", "الإحساس:")}</span> {localizePerfumeText(productMeta.feeling, isArabic)}</p>
             </div>
           </article>
 
           <article className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
-            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Reviews & Ratings", "التقييمات والمراجعات")}</h2>
-            <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">{t(`Rating ${productMeta.rating.toFixed(1)}/5 from ${productMeta.reviewCount} reviews`, `التقييم ${productMeta.rating.toFixed(1)} من 5 من ${productMeta.reviewCount} مراجعة`)}</p>
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Avis et notes", "التقييمات والمراجعات")}</h2>
+            <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">{t(`Note ${productMeta.rating.toFixed(1)}/5 sur ${productMeta.reviewCount} avis`, `التقييم ${productMeta.rating.toFixed(1)} من 5 من ${productMeta.reviewCount} مراجعة`)}</p>
 
             <div className="mt-4 space-y-3">
               {productMeta.reviews.map((review) => (
@@ -1325,19 +1345,19 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
           </article>
 
           <article className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
-            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Extra Useful Info", "معلومات إضافية مفيدة")}</h2>
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Informations utiles", "معلومات إضافية مفيدة")}</h2>
             <div className="mt-4 space-y-3 text-sm text-stone-700 dark:text-stone-200">
               <p><span className="font-semibold">{t("Ingredients:", "المكونات:")}</span> {productMeta.ingredients.map((item) => localizePerfumeNote(item, isArabic)).join(", ")}</p>
-              <p><span className="font-semibold">{t("Delivery:", "التوصيل:")}</span> {localizePerfumeText(productMeta.shipping, isArabic)}</p>
-              <p><span className="font-semibold">{t("Return Policy:", "سياسة الإرجاع:")}</span> {localizePerfumeText(productMeta.returns, isArabic)}</p>
-              <p><span className="font-semibold">{t("Quality Notice:", "تنبيه الجودة:")}</span> {masterQualityDisclaimer(t)}</p>
+              <p><span className="font-semibold">{t("Livraison:", "التوصيل:")}</span> {localizePerfumeText(productMeta.shipping, isArabic)}</p>
+              <p><span className="font-semibold">{t("Politique de retour:", "سياسة الإرجاع:")}</span> {localizePerfumeText(productMeta.returns, isArabic)}</p>
+              <p><span className="font-semibold">{t("Avis qualite:", "تنبيه الجودة:")}</span> {masterQualityDisclaimer(t)}</p>
             </div>
           </article>
 
           <article className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
-            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("People Also Bought", "منتجات اشتراها الآخرون")}</h2>
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Produits similaires", "منتجات مشابهة")}</h2>
             {relatedPerfumes.length === 0 ? (
-              <p className="mt-3 text-sm text-stone-600 dark:text-stone-300">{t("More similar fragrances coming soon.", "ستتوفر عطور مشابهة قريباً.")}</p>
+              <p className="mt-3 text-sm text-stone-600 dark:text-stone-300">{t("Davantage de fragrances similaires bientot disponibles.", "ستتوفر عطور مشابهة قريباً.")}</p>
             ) : (
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {relatedPerfumes.map((item) => (
@@ -1346,11 +1366,11 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
                       {resolvePerfumeImage(item) ? (
                         <img src={resolvePerfumeImage(item) ?? ""} alt={item.name} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-sm text-stone-500">No image</div>
+                        <div className="flex h-full items-center justify-center text-sm text-stone-500">Pas d'image</div>
                       )}
                     </div>
                     <p className="mt-3 text-sm font-semibold text-stone-900 dark:text-stone-100">{item.name}</p>
-                    <p className="text-xs text-stone-600 dark:text-stone-300">{t("Similar fragrance profile", "طابع عطري مشابه")}</p>
+                    <p className="text-xs text-stone-600 dark:text-stone-300">{t("Profil olfactif similaire", "طابع عطري مشابه")}</p>
                   </Link>
                 ))}
               </div>
@@ -1360,7 +1380,7 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
 
         <aside className="space-y-4 sm:space-y-6 lg:sticky lg:top-8 lg:h-fit">
           <section ref={purchaseSectionRef} id="purchase-section" className="rounded-[2rem] border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-7">
-            <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">{t("Purchase", "الشراء")}</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">{t("Achat", "الشراء")}</p>
             <h2 className="mt-3 text-xl font-semibold text-stone-900 dark:text-stone-100 sm:text-2xl">{t("Commander ce parfum", "اشترِ هذا العطر")}</h2>
 
             <div className="mt-4 grid gap-2">
@@ -1378,6 +1398,8 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
                 ))}
               </div>
             </div>
+
+            <Legend />
 
             <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
               {t("Prix unitaire:", "سعر الوحدة:")} <span className="font-semibold"><Currency amount={unitPrice} /></span>
@@ -1452,12 +1474,12 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
           </section>
 
           <section className="rounded-[2rem] border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Product Summary", "ملخص المنتج")}</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Resume du produit", "ملخص المنتج")}</p>
             <div className="mt-3 space-y-2 text-sm text-stone-700 dark:text-stone-200">
-              <p><span className="font-semibold">{t("Recipe:", "التركيبة:")}</span> {localizePerfumeText(perfume.recipe, isArabic)}</p>
-              <p><span className="font-semibold">{t("Longevity:", "الثبات:")}</span> {localizePerfumeText(productMeta.longevity, isArabic)}</p>
-              <p><span className="font-semibold">{t("Sillage:", "الفوحان:")}</span> {localizePerfumeText(productMeta.sillage, isArabic)}</p>
-              <p><span className="font-semibold">{t("Rating:", "التقييم:")}</span> {productMeta.rating.toFixed(1)} / 5</p>
+              <p><span className="font-semibold">{t("Recette:", "التركيبة:")}</span> {localizePerfumeText(perfume.recipe, isArabic)}</p>
+              <p><span className="font-semibold">{t("Tenue:", "الثبات:")}</span> {localizePerfumeText(productMeta.longevity, isArabic)}</p>
+              <p><span className="font-semibold">{t("Projete:", "الفوحان:")}</span> {localizePerfumeText(productMeta.sillage, isArabic)}</p>
+              <p><span className="font-semibold">{t("Note:", "التقييم:")}</span> {productMeta.rating.toFixed(1)} / 5</p>
             </div>
           </section>
         </aside>
@@ -1494,9 +1516,9 @@ function AdminLogin({ onLogin }: { onLogin: (form: AdminLoginForm) => Promise<vo
           ? Object.values(error.response.data.errors).flat()[0]
           : undefined;
 
-        setMessage(typeof firstError === "string" ? firstError : error.response?.data?.message || "Login failed.");
+        setMessage(typeof firstError === "string" ? firstError : error.response?.data?.message || "Echec de connexion.");
       } else {
-        setMessage("Login failed.");
+        setMessage("Echec de connexion.");
       }
     } finally {
       setSubmitting(false);
@@ -1506,9 +1528,9 @@ function AdminLogin({ onLogin }: { onLogin: (form: AdminLoginForm) => Promise<vo
   return (
     <div className="min-h-screen bg-stone-100 px-6 py-10 dark:bg-stone-950">
       <div className="mx-auto max-w-md rounded-3xl bg-white p-8 shadow-xl dark:bg-stone-900">
-        <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">Admin Access</p>
-        <h1 className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100">Admin Login</h1>
-        <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">Login is restricted to admin accounts only.</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">Acces Admin</p>
+        <h1 className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100">Connexion Admin</h1>
+        <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">La connexion est reservee aux administrateurs.</p>
 
         <form className="mt-6 space-y-4" onSubmit={(event) => void handleSubmit(event)}>
           <input
@@ -1519,21 +1541,36 @@ function AdminLogin({ onLogin }: { onLogin: (form: AdminLoginForm) => Promise<vo
           />
           <input
             className="w-full rounded-xl border border-stone-300 p-3 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
-            placeholder="Password"
+            placeholder="Mot de passe"
             type="password"
             value={form.password}
             onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
           />
           <button className="w-full rounded-xl bg-stone-900 p-3 font-medium text-white disabled:opacity-70 dark:bg-stone-100 dark:text-stone-900" disabled={submitting}>
-            {submitting ? "Logging in..." : "Login"}
+            {submitting ? "Connexion..." : "Connexion"}
           </button>
 
           {message && <p className="text-sm text-rose-700">{message}</p>}
         </form>
 
-        <p className="mt-4 text-sm text-stone-500 dark:text-stone-300">Seed admin: admin@example.com / Admin123456</p>
-        <Link to="/" className="mt-4 inline-flex text-sm text-amber-700 hover:underline dark:text-amber-300">Back to catalog</Link>
+        <p className="mt-4 text-sm text-stone-500 dark:text-stone-300">Admin: admin@example.com / Admin123456</p>
+        <Link to="/" className="mt-4 inline-flex text-sm text-amber-700 hover:underline dark:text-amber-300">Retour au catalogue</Link>
       </div>
+    </div>
+  );
+}
+
+function Legend() {
+  const { t } = useLanguage();
+
+  return (
+    <div className="mt-3 rounded-xl border border-stone-200 bg-stone-50 p-3 text-xs text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
+      <p className="font-semibold">{t("Legende:", "الوسيلة:" )}</p>
+      <ul className="mt-1 list-inside list-disc space-y-0.5">
+        <li>{t("50ml: Bouteille individuelle de 50ml", "50 مل: زجاجة فردية 50 مل")}</li>
+        <li>{t("Pack 30ml x4: 4 bouteilles de 30ml", "باك 30 مل × 4: 4 زجاجات 30 مل")}</li>
+        <li>{t("Pack 50ml x3: 3 bouteilles de 50ml", "باك 50 مل × 3: 3 زجاجات 50 مل")}</li>
+      </ul>
     </div>
   );
 }
@@ -1554,7 +1591,7 @@ function AdminDashboard({ user, onLogout }: { user: User; onLogout: () => Promis
       const response = await api.get<AdminOrder[]>("/admin/orders");
       setOrders(response.data);
     } catch {
-      setMessage("Failed to load commandes.");
+      setMessage("Echec de chargement des commandes.");
     } finally {
       if (showLoading) {
         setLoading(false);
@@ -1600,7 +1637,7 @@ function AdminDashboard({ user, onLogout }: { user: User; onLogout: () => Promis
       setOrders((current) => current.map((order) => (order.id === orderId ? response.data.order : order)));
       setMessage(response.data.message);
     } catch {
-      setMessage("Failed to validate commande.");
+      setMessage("Echec de validation de la commande.");
     } finally {
       setUpdatingOrderId(null);
     }
@@ -1611,14 +1648,14 @@ function AdminDashboard({ user, onLogout }: { user: User; onLogout: () => Promis
       <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="h-fit rounded-3xl border border-stone-200 bg-white/95 p-6 shadow-xl dark:border-stone-700 dark:bg-stone-900/95 lg:sticky lg:top-6">
           <p className="text-xs uppercase tracking-[0.28em] text-stone-500 dark:text-stone-300">Perfume House</p>
-          <h1 className="mt-2 text-2xl font-semibold text-stone-900 dark:text-stone-100">Admin Console</h1>
+          <h1 className="mt-2 text-2xl font-semibold text-stone-900 dark:text-stone-100">Console Admin</h1>
           <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">{user.name}</p>
 
           <nav className="mt-8 space-y-2">
-            <a href="#stats" className="block rounded-xl bg-stone-100 px-4 py-2 text-sm font-medium text-stone-800 dark:bg-stone-800 dark:text-stone-100">Overview</a>
-            <a href="#pending-orders" className="block rounded-xl px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800">Pending Tasks</a>
-            <a href="#validated-orders" className="block rounded-xl px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800">Validated Orders</a>
-            <a href="#recent-activity" className="block rounded-xl px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800">Recent Activity</a>
+            <a href="#stats" className="block rounded-xl bg-stone-100 px-4 py-2 text-sm font-medium text-stone-800 dark:bg-stone-800 dark:text-stone-100">Apercu</a>
+            <a href="#pending-orders" className="block rounded-xl px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800">Commandes en attente</a>
+            <a href="#validated-orders" className="block rounded-xl px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800">Commandes validees</a>
+            <a href="#recent-activity" className="block rounded-xl px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800">Activite recente</a>
           </nav>
 
           <div className="mt-8 space-y-3">
@@ -1626,105 +1663,105 @@ function AdminDashboard({ user, onLogout }: { user: User; onLogout: () => Promis
               onClick={() => void fetchOrders(true)}
               className="w-full rounded-xl border border-amber-700 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-50 dark:border-amber-300 dark:text-amber-200 dark:hover:bg-amber-950/40"
             >
-              Refresh Data
+              Actualiser
             </button>
             <Link to="/" className="block w-full rounded-xl border border-stone-900 px-4 py-2 text-center text-sm font-medium text-stone-900 hover:bg-stone-900 hover:text-white dark:border-stone-300 dark:text-stone-100 dark:hover:bg-stone-100 dark:hover:text-stone-900">
-              Open Catalog
+              Ouvrir le catalogue
             </Link>
             <button
               onClick={() => void onLogout()}
               className="w-full rounded-xl bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300"
             >
-              Logout
+              Deconnexion
             </button>
           </div>
         </aside>
 
         <main className="space-y-6">
           <section className="rounded-3xl border border-stone-200 bg-white p-7 shadow-xl dark:border-stone-700 dark:bg-stone-900">
-            <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">Operations Dashboard</p>
-            <h2 className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100">Orders and Fulfillment</h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-500 dark:text-stone-300">Tableau de bord</p>
+            <h2 className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100">Commandes et Traitement</h2>
             <p className="mt-3 max-w-3xl text-sm text-stone-600 dark:text-stone-300">
-              Validate pending guest orders quickly, monitor performance statistics, and track activity with full timestamps.
+              Validez rapidement les commandes des invites, suivez les statistiques de performance et l'activite.
             </p>
             {message && <p className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900">{message}</p>}
           </section>
 
           <section id="stats" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <article className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900">
-              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Total Orders</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Total commandes</p>
               <p className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100">{orders.length}</p>
             </article>
             <article className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.2em] text-amber-800">Pending Tasks</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-amber-800">En attente</p>
               <p className="mt-2 text-3xl font-semibold text-amber-900">{pendingOrders.length}</p>
             </article>
             <article className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.2em] text-emerald-800">Validated</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-emerald-800">Validees</p>
               <p className="mt-2 text-3xl font-semibold text-emerald-900">{validatedOrders.length}</p>
             </article>
             <article className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900">
-              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Validated Revenue</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Revenus valides</p>
               <p className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100"><Currency amount={totalRevenue} /></p>
             </article>
             <article className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900">
-              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Avg. Order Value</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Valeur moyenne</p>
               <p className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100"><Currency amount={averageOrderValue} /></p>
             </article>
             <article className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900">
-              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Today / Validation Rate</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">Aujourd hui / Taux</p>
               <p className="mt-2 text-3xl font-semibold text-stone-900 dark:text-stone-100">{ordersToday}</p>
-              <p className="mt-1 text-sm text-stone-600 dark:text-stone-300">{validationRate.toFixed(1)}% validated</p>
+              <p className="mt-1 text-sm text-stone-600 dark:text-stone-300">{validationRate.toFixed(1)}% validees</p>
             </article>
           </section>
 
           <section id="pending-orders" className="rounded-3xl border border-stone-200 bg-white p-7 shadow-xl dark:border-stone-700 dark:bg-stone-900">
             <div className="mb-5 flex items-center justify-between gap-3">
-              <h2 className="text-2xl font-semibold text-stone-900">Pending Orders</h2>
+              <h2 className="text-2xl font-semibold text-stone-900">Commandes en attente</h2>
               <p className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
-                {pendingOrders.length} waiting validation
+                {pendingOrders.length} en attente
               </p>
             </div>
 
             {loading ? (
-              <p className="text-stone-600 dark:text-stone-300">Loading orders...</p>
+              <p className="text-stone-600 dark:text-stone-300">Chargement des commandes...</p>
             ) : pendingOrders.length === 0 ? (
-              <p className="text-stone-600 dark:text-stone-300">No pending orders.</p>
+              <p className="text-stone-600 dark:text-stone-300">Aucune commande en attente.</p>
             ) : (
               <div className="space-y-3">
                 {pendingOrders.map((order) => (
                   <article key={order.id} className="rounded-2xl border border-stone-200 p-4 dark:border-stone-700">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="text-sm text-stone-500 dark:text-stone-300">Order #{order.id} • {formatOrderDate(order.created_at)}</p>
-                        <p className="text-lg font-semibold text-stone-900 dark:text-stone-100">{order.perfume ?? "Perfume"}</p>
-                        <p className="text-sm text-stone-600 dark:text-stone-300">{order.customer_name} • Qty {order.quantity} • {order.purchase_option}</p>
+                        <p className="text-sm text-stone-500 dark:text-stone-300">Commande #{order.id} • {formatOrderDate(order.created_at)}</p>
+                        <p className="text-lg font-semibold text-stone-900 dark:text-stone-100">{order.perfume ?? "Parfum"}</p>
+                        <p className="text-sm text-stone-600 dark:text-stone-300">{order.customer_name} • Qte {order.quantity} • {order.purchase_option}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setExpandedOrderId((current) => (current === order.id ? null : order.id))}
                           className="rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-800 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-100 dark:hover:bg-stone-800"
                         >
-                          {expandedOrderId === order.id ? "Hide" : "Details"}
+                          {expandedOrderId === order.id ? "Masquer" : "Details"}
                         </button>
                         <button
                           onClick={() => void markAsValidated(order.id)}
                           disabled={updatingOrderId === order.id}
                           className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-70"
                         >
-                          {updatingOrderId === order.id ? "Validating..." : "Mark Validated"}
+                          {updatingOrderId === order.id ? "Validation..." : "Valider"}
                         </button>
                       </div>
                     </div>
 
                     {expandedOrderId === order.id && (
                       <div className="mt-4 grid gap-2 rounded-xl bg-stone-50 p-4 text-sm text-stone-700 dark:bg-stone-800 dark:text-stone-200">
-                        <p><span className="font-semibold">Guest Name:</span> {order.customer_name}</p>
-                        <p><span className="font-semibold">Address:</span> {order.customer_address}</p>
-                        <p><span className="font-semibold">Phone:</span> {order.customer_phone ?? "-"}</p>
-                        <p><span className="font-semibold">Offer:</span> {order.purchase_option}</p>
+                        <p><span className="font-semibold">Nom:</span> {order.customer_name}</p>
+                        <p><span className="font-semibold">Adresse:</span> {order.customer_address}</p>
+                        <p><span className="font-semibold">Telephone:</span> {order.customer_phone ?? "-"}</p>
+                        <p><span className="font-semibold">Offre:</span> {order.purchase_option}</p>
                         <p><span className="font-semibold">Total:</span> <Currency amount={order.total_price} /></p>
-                        <p><span className="font-semibold">Created At:</span> {formatOrderDate(order.created_at)}</p>
+                        <p><span className="font-semibold">Cree le:</span> {formatOrderDate(order.created_at)}</p>
                       </div>
                     )}
                   </article>
@@ -1735,28 +1772,28 @@ function AdminDashboard({ user, onLogout }: { user: User; onLogout: () => Promis
 
           <section id="validated-orders" className="rounded-3xl border border-stone-200 bg-white p-7 shadow-xl dark:border-stone-700 dark:bg-stone-900">
             <div className="mb-5 flex items-center justify-between gap-3">
-              <h2 className="text-2xl font-semibold text-stone-900">Validated Orders</h2>
+              <h2 className="text-2xl font-semibold text-stone-900">Commandes validees</h2>
               <p className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
-                {validatedOrders.length} completed
+                {validatedOrders.length} completees
               </p>
             </div>
 
             {loading ? (
-              <p className="text-stone-600 dark:text-stone-300">Loading orders...</p>
+              <p className="text-stone-600 dark:text-stone-300">Chargement des commandes...</p>
             ) : validatedOrders.length === 0 ? (
-              <p className="text-stone-600 dark:text-stone-300">No validated orders yet.</p>
+              <p className="text-stone-600 dark:text-stone-300">Aucune commande validee.</p>
             ) : (
               <div className="space-y-3">
                 {validatedOrders.map((order) => (
                   <article key={order.id} className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="text-sm text-emerald-800">Order #{order.id} • {formatOrderDate(order.created_at)}</p>
-                        <p className="text-lg font-semibold text-stone-900 dark:text-stone-100">{order.perfume ?? "Perfume"}</p>
-                        <p className="text-sm text-stone-700 dark:text-stone-200">{order.customer_name} • Qty {order.quantity} • {order.purchase_option}</p>
+                        <p className="text-sm text-emerald-800">Commande #{order.id} • {formatOrderDate(order.created_at)}</p>
+                        <p className="text-lg font-semibold text-stone-900 dark:text-stone-100">{order.perfume ?? "Parfum"}</p>
+                        <p className="text-sm text-stone-700 dark:text-stone-200">{order.customer_name} • Qte {order.quantity} • {order.purchase_option}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-emerald-800">Validated</p>
+                        <p className="text-sm font-semibold text-emerald-800">Validee</p>
                         <p className="text-sm text-stone-700 dark:text-stone-200"><Currency amount={order.total_price} /></p>
                       </div>
                     </div>
@@ -1767,15 +1804,15 @@ function AdminDashboard({ user, onLogout }: { user: User; onLogout: () => Promis
           </section>
 
           <section id="recent-activity" className="rounded-3xl border border-stone-200 bg-white p-7 shadow-xl dark:border-stone-700 dark:bg-stone-900">
-            <h2 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">Latest Activity</h2>
+            <h2 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">Activite recente</h2>
             {latestOrders.length === 0 ? (
-              <p className="mt-3 text-stone-600 dark:text-stone-300">No activity yet.</p>
+              <p className="mt-3 text-stone-600 dark:text-stone-300">Aucune activite.</p>
             ) : (
               <div className="mt-4 space-y-3">
                 {latestOrders.map((order) => (
                   <div key={order.id} className="rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-700 dark:border-stone-700 dark:text-stone-200">
                     <p>
-                      <span className="font-semibold">Order #{order.id}</span> by {order.customer_name} ({order.status})
+                      <span className="font-semibold">Commande #{order.id}</span> par {order.customer_name} ({order.status})
                     </p>
                     <p className="mt-1 text-xs uppercase tracking-[0.12em] text-stone-500">{formatOrderDate(order.created_at)}</p>
                   </div>
@@ -1798,10 +1835,6 @@ function App() {
     const savedLanguage = window.localStorage.getItem(languageStorageKey);
     if (savedLanguage === "ar" || savedLanguage === "fr") {
       return savedLanguage;
-    }
-
-    if (savedLanguage === "en") {
-      return "fr";
     }
 
     return window.navigator.language.startsWith("ar") ? "ar" : "fr";
@@ -1873,7 +1906,7 @@ function App() {
   };
 
   if (loading) {
-    return <div className="p-8 dark:bg-stone-950 dark:text-stone-100">Loading session...</div>;
+    return <div className="p-8 dark:bg-stone-950 dark:text-stone-100">Chargement de la session...</div>;
   }
 
   const isArabic = language === "ar";
@@ -1884,7 +1917,8 @@ function App() {
     || location.pathname === "/parfumes"
     || location.pathname === "/offres"
     || location.pathname === "/marques"
-    || location.pathname === "/packs";
+    || location.pathname === "/packs"
+    || location.pathname === "/saisons";
   const controlsTopClass = isStorefrontRoute ? "top-16" : "top-3";
 
   return (
