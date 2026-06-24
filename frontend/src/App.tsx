@@ -6,7 +6,6 @@ import type { AdminOrder, OrderResponse, Perfume, User } from "./types";
 import APLogo from "./pictures/AP.png";
 import BlueImage from "./pictures/Blue.png";
 import BossImage from "./pictures/Boss.jpeg";
-import GioImage from "./pictures/Gio.jpeg";
 import ImaginationImage from "./pictures/Imagination.png";
 import InvictusImage from "./pictures/Invectus.png";
 import LHommeImage from "./pictures/LHOME.png";
