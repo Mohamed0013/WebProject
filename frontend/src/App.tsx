@@ -4,19 +4,19 @@ import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } fr
 import api from "./api";
 import type { AdminOrder, OrderResponse, Perfume, User } from "./types";
 import APLogo from "./pictures/AP.png";
-import BlueImage from "./pictures/Blue.jpeg";
+import BlueImage from "./pictures/Blue.png";
 import BossImage from "./pictures/Boss.jpeg";
 import GioImage from "./pictures/Gio.jpeg";
-import ImaginationImage from "./pictures/Imagination.jpeg";
-import InvictusImage from "./pictures/Invectus.jpeg";
-import LHommeImage from "./pictures/LHOME.jpeg";
-import LightBlueImage from "./pictures/LightBlue.jpeg";
+import ImaginationImage from "./pictures/Imagination.png";
+import InvictusImage from "./pictures/Invectus.png";
+import LHommeImage from "./pictures/LHOME.png";
+import LightBlueImage from "./pictures/LightBlue.png";
 import PackEliteHarmonyImage from "./pictures/pack3/pack-elite-harmony.png";
 import PackHarmonieImage from "./pictures/pack3/pack-harmonie.png";
 import WantedImage from "./pictures/Wanted.jpeg";
 import YImage from "./pictures/Y.jpeg";
 import SauvageImage from "./pictures/sauvage.jpeg";
-import YouImage from "./pictures/You.jpeg";
+import YouImage from "./pictures/You.png";
 import VersaceErosImage from "./pictures/VersaceEros.jpeg";
 
 type AdminLoginForm = {
