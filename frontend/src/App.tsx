@@ -10,7 +10,7 @@ import GioImage from "./pictures/Gio.jpeg";
 import ImaginationImage from "./pictures/Imagination.png";
 import InvictusImage from "./pictures/Invectus.png";
 import LHommeImage from "./pictures/LHOME.png";
-import LightBlueImage from "./pictures/LightBlue.jpeg";
+import LightBlueImage from "./pictures/LightBlue.png";
 import PackEliteHarmonyImage from "./pictures/pack3/pack-elite-harmony.png";
 import PackHarmonieImage from "./pictures/pack3/pack-harmonie.png";
 import WantedImage from "./pictures/Wanted.jpeg";
