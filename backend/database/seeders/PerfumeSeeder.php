@@ -9,6 +9,8 @@ class PerfumeSeeder extends Seeder
 {
     public function run(): void
     {
+        \App\Models\Order::query()->delete();
+        \App\Models\Perfume::query()->delete();
         $perfumes = [
             [
                 'name' => 'Dior Sauvage',
