@@ -1015,6 +1015,7 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [isPurchaseSectionVisible, setIsPurchaseSectionVisible] = useState(false);
   const purchaseSectionRef = useRef<HTMLElement | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState<GuestOrderForm>({
     customer_name: "",
     customer_address: "",
@@ -1157,6 +1158,9 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
 
   const handleBuyNow = () => {
     purchaseSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => {
+      nameInputRef.current?.focus();
+    }, 400);
   };
 
   useEffect(() => {
@@ -1434,6 +1438,7 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
 
             <form className="mt-6 space-y-4" onSubmit={(event) => void onSubmit(event)}>
               <input
+                ref={nameInputRef}
                 className="w-full rounded-xl border border-stone-300 p-3.5 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
                 placeholder={t("Votre nom", "اسمك")}
                 value={form.customer_name}
