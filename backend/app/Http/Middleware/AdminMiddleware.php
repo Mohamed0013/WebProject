@@ -23,7 +23,7 @@ class AdminMiddleware
         }
 
         // Not admin
-        if (!$user->is_admin) {
+        if ($user->role !== 'admin') {
             return response()->json([
                 'message' => 'Forbidden. Admin access only.'
             ], 403);

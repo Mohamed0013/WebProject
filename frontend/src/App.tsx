@@ -18,6 +18,11 @@ import YImage from "./pictures/Y.jpeg";
 import SauvageImage from "./pictures/sauvage.jpeg";
 import YouImage from "./pictures/You.png";
 import VersaceErosImage from "./pictures/VersaceEros.jpeg";
+import BiancolatteImage from "./pictures/Biancolatte.jpg";
+import ErbapuraImage from "./pictures/Erbapura.jpg";
+import HomeinstantImage from "./pictures/Homeinstant.jpg";
+import LinstantGuirlanImage from "./pictures/L'instantGuirlan.jpg";
+import LacostImage from "./pictures/Lacost.png";
 
 type AdminLoginForm = {
   email: string;
@@ -123,7 +128,6 @@ const ingredientArabicMap: Record<string, string> = {
 };
 
 const perfumeImageBySlug: Record<string, string> = {
-  "acquadi-gio": GioImage,
   "bleu-chanel": BlueImage,
   "boss-bottled": BossImage,
   "dolce-gabbana-light-blue": LightBlueImage,
@@ -135,6 +139,11 @@ const perfumeImageBySlug: Record<string, string> = {
   "dior-sauvage": SauvageImage,
   "stronger-with-you": YouImage,
   "versace-eros": VersaceErosImage,
+  "bianco-latte": BiancolatteImage,
+  "erba-pura": ErbapuraImage,
+  "dior-homme-intense": HomeinstantImage,
+  "l-instant-de-guerlain": LinstantGuirlanImage,
+  "lacoste-blanc": LacostImage,
 };
 
 const homeFeaturedSlugs = [
@@ -189,7 +198,7 @@ const packShowcaseItems: PackShowcaseItem[] = [
     image: PackEliteHarmonyImage,
     perfumeSlug: "imagination",
     purchaseOption: "pack_50ml_x3",
-    includedSlugs: ["imagination", "l-homme-ysl", "acquadi-gio"],
+    includedSlugs: ["imagination", "l-homme-ysl", "erba-pura"],
     titleFr: "Pack 50ml Trio",
     titleAr: "باك 50مل ثلاثي",
     descriptionFr: "3 parfums 50ml differents pour 179 DH.",
