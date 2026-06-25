@@ -152,7 +152,7 @@ const perfumeImageBySlug: Record<string, string> = {
   "le-male-le-parfum" : LemaleLeparfume,
   "tom-ford-noir" : Tomford,
   "tom-ford-oud-wood" : TomfordOud,
-  "naxos" : Naxos,
+  "xerjoff-naxos" : Naxos,
 };
 
 const homeFeaturedSlugs = [
