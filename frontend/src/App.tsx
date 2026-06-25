@@ -934,7 +934,6 @@ function PerfumeSelectorModal({
 
 function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void }) {
   const { t, isArabic } = useLanguage();
-  const navigate = useNavigate();
   const { packId = "" } = useParams();
   const [catalog, setCatalog] = useState<Perfume[]>([]);
   const [loading, setLoading] = useState(true);
