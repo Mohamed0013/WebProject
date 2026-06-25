@@ -195,7 +195,9 @@ type PackShowcaseItem = {
   price: number;
 };
 
+// AFTER
 const packShowcaseItems: PackShowcaseItem[] = [
+  // ── FORMAT PACKS ──────────────────────────────────────────
   {
     id: "pack-30ml-quad",
     image: PackHarmonieImage,
@@ -204,10 +206,10 @@ const packShowcaseItems: PackShowcaseItem[] = [
     selectionCount: 4,
     titleFr: "Pack 30ml x4",
     titleAr: "باك 30مل × 4",
-    descriptionFr: "4 parfums 30ml pour 149 DH.",
-    descriptionAr: "4 عطور 30مل بـ 149 درهم.",
-    detailsFr: "Construisez votre pack de 4 parfums au format 30ml. Parfait pour varier chaque jour.",
-    detailsAr: "قم ببناء الباك الخاص بك مكون من 4 عطور بحجم 30مل. مثالي لتنويع الروائح يوميا.",
+    descriptionFr: "4 parfums 30ml pour 149 DH. Variez chaque jour.",
+    descriptionAr: "4 عطور 30مل بـ 149 درهم. نوع عطرك يومياً.",
+    detailsFr: "Construisez votre pack de 4 parfums au format 30ml. Parfait pour varier chaque jour de la semaine.",
+    detailsAr: "قم ببناء الباك الخاص بك مكون من 4 عطور بحجم 30مل. مثالي لتنويع الروائح كل يوم في الأسبوع.",
     price: 149,
   },
   {
@@ -218,10 +220,154 @@ const packShowcaseItems: PackShowcaseItem[] = [
     selectionCount: 3,
     titleFr: "Pack 50ml Trio",
     titleAr: "باك 50مل ثلاثي",
-    descriptionFr: "3 parfums 50ml differents pour 179 DH.",
-    descriptionAr: "3 عطور 50مل مختلفة بـ 179 درهم.",
+    descriptionFr: "3 parfums 50ml pour 179 DH. Le choix complet.",
+    descriptionAr: "3 عطور 50مل بـ 179 درهم. الاختيار المتكامل.",
     detailsFr: "Construisez votre pack de 3 parfums 50ml pour un choix complet au quotidien.",
     detailsAr: "قم ببناء الباك الخاص بك مكون من 3 عطور 50مل لاختيارات يومية متكاملة.",
+    price: 179,
+  },
+
+  // ── SEASONAL PACKS ────────────────────────────────────────
+  {
+    id: "pack-ete",
+    image: PackEliteHarmonyImage,
+    perfumeSlug: "dolce-gabbana-light-blue",
+    purchaseOption: "pack_30ml_x4",
+    selectionCount: 4,
+    titleFr: "Pack Été ☀️",
+    titleAr: "باك الصيف ☀️",
+    descriptionFr: "4 parfums frais et lumineux pour l'été. 149 DH.",
+    descriptionAr: "4 عطور منعشة ومضيئة للصيف. 149 درهم.",
+    detailsFr: "Des senteurs aquatiques, citronnées et légères pensées pour les journées chaudes. Légèreté et fraîcheur garanties.",
+    detailsAr: "روائح مائية وحمضية وخفيفة مصممة للأيام الحارة. خفة وانتعاش مضمونان.",
+    price: 149,
+  },
+  {
+    id: "pack-hiver",
+    image: PackHarmonieImage,
+    perfumeSlug: "tom-ford-noir",
+    purchaseOption: "pack_30ml_x4",
+    selectionCount: 4,
+    titleFr: "Pack Hiver ❄️",
+    titleAr: "باك الشتاء ❄️",
+    descriptionFr: "4 parfums chauds et enveloppants pour l'hiver. 149 DH.",
+    descriptionAr: "4 عطور دافئة وعميقة للشتاء. 149 درهم.",
+    detailsFr: "Des notes boisées, ambrées et épicées pour vous envelopper pendant les nuits froides. Chaleur et profondeur.",
+    detailsAr: "نوتات خشبية وعنبرية وتوابل تلفك خلال الليالي الباردة. دفء وعمق.",
+    price: 149,
+  },
+  {
+    id: "pack-printemps",
+    image: PackEliteHarmonyImage,
+    perfumeSlug: "l-homme-ysl",
+    purchaseOption: "pack_30ml_x4",
+    selectionCount: 4,
+    titleFr: "Pack Printemps 🌸",
+    titleAr: "باك الربيع 🌸",
+    descriptionFr: "4 parfums floraux et doux pour le printemps. 149 DH.",
+    descriptionAr: "4 عطور زهرية وناعمة للربيع. 149 درهم.",
+    detailsFr: "Des senteurs fleuries, poudrées et délicates qui accompagnent le renouveau de la nature.",
+    detailsAr: "روائح زهرية وناعمة ورقيقة ترافق تجدد الطبيعة.",
+    price: 149,
+  },
+  {
+    id: "pack-automne",
+    image: PackHarmonieImage,
+    perfumeSlug: "xerjoff-naxos",
+    purchaseOption: "pack_30ml_x4",
+    selectionCount: 4,
+    titleFr: "Pack Automne 🍂",
+    titleAr: "باك الخريف 🍂",
+    descriptionFr: "4 parfums doux et boisés pour l'automne. 149 DH.",
+    descriptionAr: "4 عطور ناعمة وخشبية للخريف. 149 درهم.",
+    detailsFr: "Des notes de bois sec, de cuir et de résine pour accompagner les journées d'automne.",
+    detailsAr: "نوتات خشب جاف وجلد وراتنج لمرافقة أيام الخريف.",
+    price: 149,
+  },
+
+  // ── MOOD / OCCASION PACKS ─────────────────────────────────
+  {
+    id: "pack-soiree",
+    image: PackEliteHarmonyImage,
+    perfumeSlug: "le-male-elixir",
+    purchaseOption: "pack_50ml_x3",
+    selectionCount: 3,
+    titleFr: "Pack Soirée 🌙",
+    titleAr: "باك السهرة 🌙",
+    descriptionFr: "3 parfums intenses et séducteurs pour vos soirées. 179 DH.",
+    descriptionAr: "3 عطور قوية وجذابة لسهراتك. 179 درهم.",
+    detailsFr: "Oud, ambre et épices — des fragrances qui marquent les esprits lors de vos soirées et événements.",
+    detailsAr: "عود وعنبر وتوابل — عطور تترك أثراً في الذاكرة خلال سهراتك وفعالياتك.",
+    price: 179,
+  },
+  {
+    id: "pack-bureau",
+    image: PackHarmonieImage,
+    perfumeSlug: "boss-bottled",
+    purchaseOption: "pack_50ml_x3",
+    selectionCount: 3,
+    titleFr: "Pack Bureau 💼",
+    titleAr: "باك المكتب 💼",
+    descriptionFr: "3 parfums discrets et élégants pour le bureau. 179 DH.",
+    descriptionAr: "3 عطور راقية وخفيفة مناسبة للعمل. 179 درهم.",
+    detailsFr: "Des senteurs propres, boisées et légères qui inspirent confiance et professionnalisme.",
+    detailsAr: "روائح نظيفة وخشبية وخفيفة توحي بالثقة والاحترافية.",
+    price: 179,
+  },
+  {
+    id: "pack-sport",
+    image: PackEliteHarmonyImage,
+    perfumeSlug: "invictus",
+    purchaseOption: "pack_30ml_x4",
+    selectionCount: 4,
+    titleFr: "Pack Sport ⚡",
+    titleAr: "باك الرياضة ⚡",
+    descriptionFr: "4 parfums frais et dynamiques pour le sport. 149 DH.",
+    descriptionAr: "4 عطور منعشة وديناميكية للرياضة. 149 درهم.",
+    detailsFr: "Des fragrances aquatiques et énergiques pensées pour les sportifs et les esprits actifs.",
+    detailsAr: "عطور مائية وحيوية مصممة للرياضيين وأصحاب الروح النشطة.",
+    price: 149,
+  },
+  {
+    id: "pack-romantique",
+    image: PackHarmonieImage,
+    perfumeSlug: "erba-pura",
+    purchaseOption: "pack_50ml_x3",
+    selectionCount: 3,
+    titleFr: "Pack Romantique 🌹",
+    titleAr: "باك الرومانسية 🌹",
+    descriptionFr: "3 parfums doux et sensuels pour les moments romantiques. 179 DH.",
+    descriptionAr: "3 عطور ناعمة وحسية للحظات الرومانسية. 179 درهم.",
+    detailsFr: "Des notes florales, musquées et vanillées pour des moments intimes inoubliables.",
+    detailsAr: "نوتات زهرية ومسكية وفانيلية للحظات حميمة لا تُنسى.",
+    price: 179,
+  },
+  {
+    id: "pack-voyage",
+    image: PackEliteHarmonyImage,
+    perfumeSlug: "imagination",
+    purchaseOption: "pack_30ml_x4",
+    selectionCount: 4,
+    titleFr: "Pack Voyage ✈️",
+    titleAr: "باك السفر ✈️",
+    descriptionFr: "4 parfums 30ml compacts, parfaits pour voyager. 149 DH.",
+    descriptionAr: "4 عطور 30مل مدمجة، مثالية للسفر. 149 درهم.",
+    detailsFr: "Le format 30ml passe partout en cabine. Emportez 4 humeurs différentes dans votre valise.",
+    detailsAr: "حجم 30مل مقبول في المقصورة. خذ معك 4 مزاجات مختلفة في حقيبتك.",
+    price: 149,
+  },
+  {
+    id: "pack-cadeau",
+    image: PackHarmonieImage,
+    perfumeSlug: "versace-eros",
+    purchaseOption: "pack_50ml_x3",
+    selectionCount: 3,
+    titleFr: "Pack Cadeau 🎁",
+    titleAr: "باك الهدية 🎁",
+    descriptionFr: "3 parfums premium pour offrir en cadeau. 179 DH.",
+    descriptionAr: "3 عطور فاخرة مثالية كهدية. 179 درهم.",
+    detailsFr: "Une sélection soignée de 3 parfums d'exception pour offrir à quelqu'un de spécial.",
+    detailsAr: "تشكيلة مختارة بعناية من 3 عطور استثنائية لتهديها لشخص مميز.",
     price: 179,
   },
 ];
@@ -762,7 +908,20 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
                   <div className="aspect-[4/3] overflow-hidden bg-stone-200 dark:bg-stone-800">
                     <img src={pack.image} alt={t(pack.titleFr, pack.titleAr)} className="h-full w-full object-cover" />
                   </div>
+                  // AFTER
                   <div className="space-y-2 p-3">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${
+                        pack.purchaseOption === "pack_30ml_x4"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-stone-100 text-stone-700"
+                      }`}>
+                        {pack.purchaseOption === "pack_30ml_x4" ? "30ml x4" : "50ml x3"}
+                      </span>
+                      <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+                        {t("Personnalisable", "قابل للتخصيص")}
+                      </span>
+                    </div>
                     <p className="text-sm font-semibold leading-snug">{t(pack.titleFr, pack.titleAr)}</p>
                     <p className="text-xs text-stone-600 dark:text-stone-300">{t(pack.descriptionFr, pack.descriptionAr)}</p>
                     <p className="text-xs font-semibold text-amber-800"><Currency amount={pack.price} /></p>
