@@ -10,9 +10,9 @@ class OrderController extends Controller
 {
     private const PURCHASE_OPTION_PRICING = [
         'pack_30ml_x2' => ['type' => 'fixed', 'value' => 69.0],
-        'pack_30ml_x4' => ['type' => 'fixed', 'value' => 119.0],
-        'single_50ml' => ['type' => 'fixed', 'value' => 69.0],
-        'pack_50ml_x3' => ['type' => 'fixed', 'value' => 149.0],
+        'pack_30ml_x4' => ['type' => 'fixed', 'value' => 149.0],
+        'single_50ml' => ['type' => 'fixed', 'value' => 79.0],
+        'pack_50ml_x3' => ['type' => 'fixed', 'value' => 179.0],
         'pack_20ml_x5' => ['type' => 'fixed', 'value' => 139.0],
     ];
 
