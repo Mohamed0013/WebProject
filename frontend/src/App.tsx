@@ -26,6 +26,7 @@ import Naxos from "./pictures/Naxos.jpeg"
 import Lemaleelexir from "./pictures/Le_male_elexire.png"
 import LemaleLeparfume from "./pictures/Le_male_parfume.png"
 import Tomford from "./pictures/Tom_ford_noir.png"
+import TomfordOud from "./pictures/TomfordOudWood.png"
 
 type AdminLoginForm = {
   email: string;
@@ -147,9 +148,10 @@ const perfumeImageBySlug: Record<string, string> = {
   "dior-homme-intense": HomeinstantImage,
   "l-instant-de-guerlain": LinstantGuirlanImage,
   "lacoste-blanc": LacostImage,
-  "Le-male-elexir" : Lemaleelexir,
-  "Le-male-parfume" : LemaleLeparfume,
-  "tomfordnoir" : Tomford,
+  "le-male-elixir" : Lemaleelexir,
+  "le-male-le-parfum" : LemaleLeparfume,
+  "tom-ford-noir" : Tomford,
+  "tom-ford-oud-wood" : TomfordOud,
   "naxos" : Naxos,
 };
 
