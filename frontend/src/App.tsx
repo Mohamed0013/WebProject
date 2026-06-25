@@ -22,6 +22,10 @@ import ErbapuraImage from "./pictures/Erbapura.jpg";
 import HomeinstantImage from "./pictures/Homeinstant.jpg";
 import LinstantGuirlanImage from "./pictures/L'instantGuirlan.jpg";
 import LacostImage from "./pictures/Lacost.png";
+import Naxos from "./pictures/Naxos.jpeg"
+import Lemaleelexir from "./pictures/Le_male_elexire.png"
+import LemaleLeparfume from "./pictures/Le_male_parfume.png"
+import Tomford from "./pictures/Tom_ford_noir.png"
 
 type AdminLoginForm = {
   email: string;
@@ -143,6 +147,10 @@ const perfumeImageBySlug: Record<string, string> = {
   "dior-homme-intense": HomeinstantImage,
   "l-instant-de-guerlain": LinstantGuirlanImage,
   "lacoste-blanc": LacostImage,
+  "Le-male-elexir" : Lemaleelexir,
+  "Le-male-parfume" : LemaleLeparfume,
+  "tomfordnoir" : Tomford,
+  "naxos" : Naxos,
 };
 
 const homeFeaturedSlugs = [
