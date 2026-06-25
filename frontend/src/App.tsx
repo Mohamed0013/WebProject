@@ -935,6 +935,7 @@ function PerfumeSelectorModal({
 function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void }) {
   const { t, isArabic } = useLanguage();
   const { packId = "" } = useParams();
+  const location = useLocation();
   const [catalog, setCatalog] = useState<Perfume[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -947,9 +948,20 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
 
   const selectionCount = pack?.selectionCount ?? 4;
 
+  const preselectedPerfume = useMemo(() => {
+    const state = location.state as { preselectedPerfume?: Perfume } | null;
+    return state?.preselectedPerfume ?? null;
+  }, [location.state]);
+
   useEffect(() => {
-    setSelectedPerfumes(new Array(selectionCount).fill(null));
-  }, [selectionCount]);
+    const slots = new Array(selectionCount).fill(null);
+    if (preselectedPerfume) {
+      slots[0] = preselectedPerfume;
+    }
+    setSelectedPerfumes(slots);
+    // Clear the navigation state so it doesn't re-trigger
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+  }, [selectionCount, preselectedPerfume]);
 
   useEffect(() => {
     void api.get<Perfume[]>("/perfumes")
@@ -1459,8 +1471,26 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
 
   const total = useMemo(() => unitPrice * form.quantity, [unitPrice, form.quantity]);
 
+  const packIdFromOption = useMemo(() => {
+    if (form.purchase_option === "pack_30ml_x4") {
+      return "pack-30ml-quad";
+    }
+    if (form.purchase_option === "pack_50ml_x3") {
+      return "pack-50ml-trio";
+    }
+    return null;
+  }, [form.purchase_option]);
+
   const handleAddToCart = () => {
     if (!perfume) {
+      return;
+    }
+
+    // If a pack option is selected, redirect to the pack page
+    if (packIdFromOption) {
+      navigate(`/pack/${packIdFromOption}`, {
+        state: { preselectedPerfume: perfume },
+      });
       return;
     }
 
@@ -1486,6 +1516,13 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
   };
 
   const handleBuyNow = () => {
+    // If a pack option is selected, redirect to the pack page
+    if (packIdFromOption) {
+      navigate(`/pack/${packIdFromOption}`, {
+        state: { preselectedPerfume: perfume },
+      });
+      return;
+    }
     purchaseSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     setTimeout(() => {
       nameInputRef.current?.focus();
