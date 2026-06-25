@@ -954,14 +954,22 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
   }, [location.state]);
 
   useEffect(() => {
-    const slots = new Array(selectionCount).fill(null);
-    if (preselectedPerfume) {
-      slots[0] = preselectedPerfume;
-    }
-    setSelectedPerfumes(slots);
-    // Clear the navigation state so it doesn't re-trigger
-    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-  }, [selectionCount, preselectedPerfume]);
+  const slots = new Array(selectionCount).fill(null);
+  if (preselectedPerfume) {
+    slots[0] = preselectedPerfume;
+  }
+  setSelectedPerfumes(slots);
+  window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+
+  // Auto-open the selector for the first empty slot
+  if (preselectedPerfume && selectionCount > 1) {
+    setCurrentSlotIndex(1);
+    setModalOpen(true);
+  } else if (!preselectedPerfume) {
+    setCurrentSlotIndex(0);
+    setModalOpen(true);
+  }
+}, [selectionCount, preselectedPerfume]);
 
   useEffect(() => {
     void api.get<Perfume[]>("/perfumes")
@@ -983,12 +991,23 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
   };
 
   const handleSelectPerfume = (perfume: Perfume) => {
-    setSelectedPerfumes((prev) => {
-      const next = [...prev];
-      next[currentSlotIndex] = perfume;
-      return next;
-    });
-  };
+  setSelectedPerfumes((prev) => {
+    const next = [...prev];
+    next[currentSlotIndex] = perfume;
+
+    // Auto-advance to next empty slot
+    const nextEmptyIndex = next.findIndex((p, i) => i > currentSlotIndex && p === null);
+    if (nextEmptyIndex !== -1) {
+      // Small delay so modal closes cleanly before reopening
+      setTimeout(() => {
+        setCurrentSlotIndex(nextEmptyIndex);
+        setModalOpen(true);
+      }, 300);
+    }
+
+    return next;
+  });
+};
 
   const handleRemovePerfume = (slotIndex: number) => {
     setSelectedPerfumes((prev) => {
@@ -1754,16 +1773,28 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
             <div className="mt-4 grid gap-2">
               <p className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("Choisir une option", "اختر العرض")}</p>
               <div className="flex flex-wrap gap-2">
-                {(Object.keys(purchaseOptionLabels) as PurchaseOption[]).map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => setForm((current) => ({ ...current, purchase_option: option }))}
-                    className={`rounded-full px-3 py-2 text-sm font-medium sm:px-4 ${form.purchase_option === option ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900" : "border border-stone-300 text-stone-700 dark:border-stone-600 dark:text-stone-200"}`}
-                  >
-                    {t(purchaseOptionLabels[option].fr, purchaseOptionLabels[option].ar)}
-                  </button>
-                ))}
+                {(Object.keys(purchaseOptionLabels) as PurchaseOption[]).map((option) => {
+                  const isPack = option === "pack_30ml_x4" || option === "pack_50ml_x3";
+                  const packId = option === "pack_30ml_x4" ? "pack-30ml-quad" : option === "pack_50ml_x3" ? "pack-50ml-trio" : null;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => {
+                        if (isPack && perfume) {
+                          navigate(`/pack/${packId}`, {
+                            state: { preselectedPerfume: perfume },
+                          });
+                          return;
+                        }
+                        setForm((current) => ({ ...current, purchase_option: option }));
+                      }}
+                      className={`rounded-full px-3 py-2 text-sm font-medium sm:px-4 ${form.purchase_option === option ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900" : "border border-stone-300 text-stone-700 dark:border-stone-600 dark:text-stone-200"}`}
+                    >
+                      {t(purchaseOptionLabels[option].fr, purchaseOptionLabels[option].ar)}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
