@@ -48,6 +48,10 @@ type Language = "fr" | "ar";
 
 type PurchaseOption = "pack_30ml_x4" | "single_50ml" | "pack_50ml_x3";
 
+type PackSelectedPerfume = {
+  perfume: Perfume;
+};
+
 type CartItem = {
   key: string;
   perfumeId: number;
@@ -58,6 +62,8 @@ type CartItem = {
   purchaseOption: PurchaseOption;
   quantity: number;
   unitPrice: number;
+  /** Perfumes selected by the user when building a custom pack */
+  selectedPerfumes?: PackSelectedPerfume[];
 };
 
 const purchaseOptionLabels: Record<PurchaseOption, { fr: string; ar: string }> = {
@@ -172,12 +178,14 @@ const seasonLabels: Record<SeasonKey, { fr: string; ar: string }> = {
   hiver: { fr: "Hiver", ar: "الشتاء" },
 };
 
+type GenderFilter = "all" | "Homme || رجالي" | "Femme || نسائي" | "Unisex || للجنسين";
+
 type PackShowcaseItem = {
   id: string;
   image: string;
   perfumeSlug: string;
   purchaseOption: PurchaseOption;
-  includedSlugs: string[];
+  selectionCount: number;
   titleFr: string;
   titleAr: string;
   descriptionFr: string;
@@ -193,13 +201,13 @@ const packShowcaseItems: PackShowcaseItem[] = [
     image: PackHarmonieImage,
     perfumeSlug: "versace-eros",
     purchaseOption: "pack_30ml_x4",
-    includedSlugs: ["versace-eros", "dior-sauvage", "y-eau-de-parfum"],
+    selectionCount: 4,
     titleFr: "Pack 30ml x4",
     titleAr: "باك 30مل × 4",
     descriptionFr: "4 parfums 30ml pour 149 DH.",
     descriptionAr: "4 عطور 30مل بـ 149 درهم.",
-    detailsFr: "Pack de 4 parfums au format 30ml. Parfait pour varier chaque jour.",
-    detailsAr: "باك 4 عطور بحجم 30مل. مثالي لتنويع الروائح يوميا.",
+    detailsFr: "Construisez votre pack de 4 parfums au format 30ml. Parfait pour varier chaque jour.",
+    detailsAr: "قم ببناء الباك الخاص بك مكون من 4 عطور بحجم 30مل. مثالي لتنويع الروائح يوميا.",
     price: 149,
   },
   {
@@ -207,13 +215,13 @@ const packShowcaseItems: PackShowcaseItem[] = [
     image: PackEliteHarmonyImage,
     perfumeSlug: "imagination",
     purchaseOption: "pack_50ml_x3",
-    includedSlugs: ["imagination", "l-homme-ysl", "erba-pura"],
+    selectionCount: 3,
     titleFr: "Pack 50ml Trio",
     titleAr: "باك 50مل ثلاثي",
     descriptionFr: "3 parfums 50ml differents pour 179 DH.",
     descriptionAr: "3 عطور 50مل مختلفة بـ 179 درهم.",
-    detailsFr: "Trois parfums 50ml pour un choix complet au quotidien.",
-    detailsAr: "ثلاث عطور 50مل لاختيارات يومية متكاملة.",
+    detailsFr: "Construisez votre pack de 3 parfums 50ml pour un choix complet au quotidien.",
+    detailsAr: "قم ببناء الباك الخاص بك مكون من 3 عطور 50مل لاختيارات يومية متكاملة.",
     price: 179,
   },
 ];
@@ -587,6 +595,15 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
                       </div>
                       <p className="text-xs text-stone-600 dark:text-stone-300">{t(purchaseOptionLabels[item.purchaseOption].fr, purchaseOptionLabels[item.purchaseOption].ar)}</p>
                       <p className="text-xs text-stone-600 dark:text-stone-300">{t("Quantite", "الكمية")}: {item.quantity}</p>
+                      {item.selectedPerfumes && item.selectedPerfumes.length > 0 && (
+                        <ul className="mt-2 space-y-0.5 border-t border-stone-100 pt-2 dark:border-stone-600">
+                          {item.selectedPerfumes.map((sp, idx) => (
+                            <li key={idx} className="text-xs text-stone-500 dark:text-stone-400">
+                              • {sp.perfume.name}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </Link>
                   ))}
                 </div>
@@ -760,6 +777,161 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
   );
 }
 
+function PerfumeSelectorModal({
+  open,
+  onClose,
+  catalog,
+  selectedSlugs,
+  onSelect,
+  currentSlotIndex,
+  selectionCount,
+}: {
+  open: boolean;
+  onClose: () => void;
+  catalog: Perfume[];
+  selectedSlugs: string[];
+  onSelect: (perfume: Perfume) => void;
+  currentSlotIndex: number;
+  selectionCount: number;
+}) {
+  const { t, isArabic } = useLanguage();
+  const [modalSearch, setModalSearch] = useState("");
+  const [genderFilter, setGenderFilter] = useState<GenderFilter>("all");
+
+  const availablePerfumes = useMemo(() => {
+    const normalizedSearch = modalSearch.trim().toLowerCase();
+    return catalog.filter((perfume) => {
+      if (normalizedSearch.length > 0) {
+        const searchable = [perfume.name, perfume.brand, perfume.fragrance_family].join(" ").toLowerCase();
+        if (!searchable.includes(normalizedSearch)) return false;
+      }
+      if (genderFilter !== "all") {
+        if (perfume.gender !== genderFilter) return false;
+      }
+      return true;
+    });
+  }, [catalog, modalSearch, genderFilter]);
+
+  useEffect(() => {
+    if (!open) {
+      setModalSearch("");
+      setGenderFilter("all");
+    }
+  }, [open]);
+
+  const genderOptions: Array<{ value: GenderFilter; fr: string; ar: string }> = [
+    { value: "all", fr: "Tous", ar: "الكل" },
+    { value: "Homme || رجالي", fr: "Homme", ar: "رجالي" },
+    { value: "Femme || نسائي", fr: "Femme", ar: "نسائي" },
+    { value: "Unisex || للجنسين", fr: "Mixte", ar: "للجنسين" },
+  ];
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-3" onClick={onClose}>
+      <div
+        className="mx-auto flex max-h-[85vh] w-full max-w-2xl flex-col rounded-3xl bg-white shadow-2xl dark:bg-stone-900"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4 dark:border-stone-700">
+          <p className="text-sm font-semibold">
+            {t(
+              `Choisir le parfum #${currentSlotIndex + 1}/${selectionCount}`,
+              `اختر العطر #${currentSlotIndex + 1}/${selectionCount}`,
+            )}
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-stone-300 px-3 py-1 text-xs dark:border-stone-600"
+          >
+            X
+          </button>
+        </div>
+
+        <div className="space-y-3 border-b border-stone-200 px-5 py-3 dark:border-stone-700">
+          <input
+            value={modalSearch}
+            onChange={(event) => setModalSearch(event.target.value)}
+            placeholder={t("Rechercher un parfum...", "ابحث عن عطر...")}
+            className="w-full rounded-xl border border-stone-300 p-2.5 text-sm dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {genderOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setGenderFilter(opt.value)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  genderFilter === opt.value
+                    ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
+                    : "border border-stone-300 bg-white dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
+                }`}
+              >
+                {t(opt.fr, opt.ar)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-3">
+          {availablePerfumes.length === 0 ? (
+            <p className="py-8 text-center text-sm text-stone-500 dark:text-stone-400">
+              {t("Aucun parfum trouve.", "لم يتم العثور على عطور.")}
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {availablePerfumes.map((perfume) => {
+                const alreadySelected = selectedSlugs.includes(perfume.slug);
+                return (
+                  <button
+                    key={perfume.id}
+                    type="button"
+                    disabled={alreadySelected}
+                    onClick={() => {
+                      onSelect(perfume);
+                      onClose();
+                    }}
+                    className={`group overflow-hidden rounded-2xl border text-left transition ${
+                      alreadySelected
+                        ? "border-stone-200 opacity-40 dark:border-stone-700"
+                        : "border-stone-200 hover:border-amber-300 hover:shadow-md dark:border-stone-700 dark:hover:border-amber-600"
+                    }`}
+                  >
+                    <div className="aspect-[4/3] overflow-hidden bg-stone-100 dark:bg-stone-800">
+                      {resolvePerfumeImage(perfume) ? (
+                        <img src={resolvePerfumeImage(perfume) ?? ""} alt={perfume.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-stone-500">{t("Pas d'image", "لا توجد صورة")}</div>
+                      )}
+                    </div>
+                    <div className="space-y-1 p-2.5">
+                      <p className="text-xs font-semibold leading-tight">{perfume.name}</p>
+                      <p className="text-[10px] text-stone-500 dark:text-stone-400">{localizePerfumeText(perfume.brand, isArabic)}</p>
+                      <p className="text-[10px] font-semibold text-amber-800"><Currency amount={perfume.price} /></p>
+                      {alreadySelected && (
+                        <p className="text-[10px] font-semibold text-rose-600">
+                          {t("Deja choisi", "تم اختياره مسبقاً")}
+                        </p>
+                      )}
+                      {!alreadySelected && (
+                        <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
+                          {t("Choisir", "اختيار")}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void }) {
   const { t, isArabic } = useLanguage();
   const navigate = useNavigate();
@@ -768,8 +940,17 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [message, setMessage] = useState("");
+  const [selectedPerfumes, setSelectedPerfumes] = useState<(Perfume | null)[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [currentSlotIndex, setCurrentSlotIndex] = useState(0);
 
   const pack = useMemo(() => packShowcaseItems.find((item) => item.id === packId) ?? null, [packId]);
+
+  const selectionCount = pack?.selectionCount ?? 4;
+
+  useEffect(() => {
+    setSelectedPerfumes(new Array(selectionCount).fill(null));
+  }, [selectionCount]);
 
   useEffect(() => {
     void api.get<Perfume[]>("/perfumes")
@@ -778,57 +959,80 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
       .finally(() => setLoading(false));
   }, []);
 
-  const includedPerfumes = useMemo(() => {
-    if (!pack) {
-      return [];
+  const filledSlugSet = useMemo(() => {
+    return new Set(selectedPerfumes.filter((p): p is Perfume => p !== null).map((p) => p.slug));
+  }, [selectedPerfumes]);
+
+  const filledCount = selectedPerfumes.filter((p) => p !== null).length;
+  const isComplete = filledCount === selectionCount;
+
+  const handleChoosePerfume = (slotIndex: number) => {
+    setCurrentSlotIndex(slotIndex);
+    setModalOpen(true);
+  };
+
+  const handleSelectPerfume = (perfume: Perfume) => {
+    setSelectedPerfumes((prev) => {
+      const next = [...prev];
+      next[currentSlotIndex] = perfume;
+      return next;
+    });
+  };
+
+  const handleRemovePerfume = (slotIndex: number) => {
+    setSelectedPerfumes((prev) => {
+      const next = [...prev];
+      next[slotIndex] = null;
+      return next;
+    });
+  };
+
+  const progressPercent = (filledCount / selectionCount) * 100;
+
+  const progressLabel = useMemo(() => {
+    if (filledCount === 0) {
+      return t(
+        `Choose ${selectionCount} perfumes`,
+        `اختر ${selectionCount} عطور`,
+      );
     }
-
-    return pack.includedSlugs
-      .map((slug) => catalog.find((perfume) => perfume.slug === slug))
-      .filter((perfume): perfume is Perfume => perfume !== undefined);
-  }, [catalog, pack]);
-
-  const representativePerfume = useMemo(() => {
-    if (!pack) {
-      return null;
+    if (filledCount >= selectionCount) {
+      return t("Your pack is complete!", "الباك الخاص بك مكتمل!");
     }
-
-    return includedPerfumes.find((perfume) => perfume.slug === pack.perfumeSlug) ?? includedPerfumes[0] ?? null;
-  }, [includedPerfumes, pack]);
+    const remaining = selectionCount - filledCount;
+    if (remaining === 1) {
+      return t("1 remaining", "متبقي 1");
+    }
+    return t(
+      `${remaining} remaining`,
+      `متبقي ${remaining}`,
+    );
+  }, [filledCount, selectionCount, t]);
 
   const unitPrice = pack?.price ?? 0;
   const total = unitPrice * quantity;
 
   const handleAddPackToCart = () => {
-    if (!pack) {
+    if (!pack || !isComplete) {
       return;
     }
 
+    const selected = selectedPerfumes.filter((p): p is Perfume => p !== null);
+
     onAddToCart({
-      key: `pack-${pack.id}`,
-      perfumeId: representativePerfume?.id ?? 0,
+      key: `pack-${pack.id}-${Date.now()}`,
+      perfumeId: selected[0]?.id ?? 0,
       perfumeName: t(pack.titleFr, pack.titleAr),
-      perfumeSlug: representativePerfume?.slug ?? pack.perfumeSlug,
+      perfumeSlug: selected[0]?.slug ?? pack.perfumeSlug,
       routePath: `/pack/${pack.id}`,
       imageUrl: pack.image,
       purchaseOption: pack.purchaseOption,
       quantity,
       unitPrice,
+      selectedPerfumes: selected.map((p) => ({ perfume: p })),
     });
 
     setMessage(t("Pack ajoute au panier.", "تمت إضافة الباك إلى السلة."));
-  };
-
-  const handleBuyNow = () => {
-    if (!pack) {
-      return;
-    }
-
-    navigate(`/perfume/${representativePerfume?.slug ?? pack.perfumeSlug}`, {
-      state: {
-        preselectedPurchaseOption: pack.purchaseOption,
-      },
-    });
   };
 
   if (loading) {
@@ -846,6 +1050,16 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
 
   return (
     <div className="min-h-screen bg-[linear-gradient(135deg,_#fef7ed_0%,_#fffaf0_40%,_#f5f5f4_100%)] px-4 pb-16 pt-10 dark:bg-[linear-gradient(135deg,_#0f172a_0%,_#111827_42%,_#1f2937_100%)] sm:px-6">
+      <PerfumeSelectorModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        catalog={catalog}
+        selectedSlugs={Array.from(filledSlugSet)}
+        onSelect={handleSelectPerfume}
+        currentSlotIndex={currentSlotIndex}
+        selectionCount={selectionCount}
+      />
+
       <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="space-y-4 rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-6">
           <Link to="/parfumes" className="text-sm text-amber-700 hover:underline dark:text-amber-300">{t("Retour au catalogue", "العودة إلى الكتالوج")}</Link>
@@ -855,20 +1069,98 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
           <div className="overflow-hidden rounded-2xl bg-stone-100 dark:bg-stone-800">
             <img src={pack.image} alt={t(pack.titleFr, pack.titleAr)} className="h-full w-full object-cover" />
           </div>
+
+          {/* Build Your Pack Section */}
+          <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-700 dark:bg-amber-950/20">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-600 dark:text-stone-300">
+              {t("Construisez votre pack", "قم ببناء الباك الخاص بك")}
+            </p>
+            {/* Progress bar */}
+            <div className="mt-3 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-stone-800 dark:text-stone-200">{progressLabel}</span>
+                <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                  {filledCount}/{selectionCount}
+                </span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                <div
+                  className="h-full rounded-full bg-amber-500 transition-all duration-500 ease-out"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Slots */}
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {selectedPerfumes.map((perfume, idx) => (
+                <div
+                  key={idx}
+                  className={`rounded-xl border p-3 transition ${
+                    perfume
+                      ? "border-emerald-300 bg-white dark:border-emerald-600 dark:bg-stone-800"
+                      : "border-dashed border-stone-300 bg-white/60 dark:border-stone-600 dark:bg-stone-800/60"
+                  }`}
+                >
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-500 dark:text-stone-400">
+                    {t(`Emplacement ${idx + 1}`, `الفتحة ${idx + 1}`)}
+                  </p>
+                  {perfume ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-stone-100 dark:bg-stone-700">
+                        {resolvePerfumeImage(perfume) ? (
+                          <img src={resolvePerfumeImage(perfume) ?? ""} alt={perfume.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-[9px] text-stone-500">{t("Img", "صورة")}</div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-stone-900 dark:text-stone-100">{perfume.name}</p>
+                        <p className="truncate text-[10px] text-stone-500 dark:text-stone-400">{localizePerfumeText(perfume.brand, isArabic)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePerfume(idx)}
+                        className="flex-shrink-0 rounded-full border border-rose-300 px-2 py-0.5 text-[10px] font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-500 dark:text-rose-300 dark:hover:bg-rose-950/30"
+                      >
+                        {t("Retirer", "إزالة")}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleChoosePerfume(idx)}
+                      className="w-full rounded-lg border border-stone-300 py-2 text-xs font-semibold text-stone-600 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-800 dark:border-stone-600 dark:text-stone-300 dark:hover:border-amber-600 dark:hover:bg-amber-950/30 dark:hover:text-amber-200"
+                    >
+                      {t("Choisir un parfum", "اختيار عطر")}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {isComplete && (
+              <div className="mt-3 animate-pulse rounded-xl bg-emerald-100 p-3 text-center text-sm font-semibold text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200">
+                {t("Votre pack est complet !", "الباك الخاص بك مكتمل!")}
+              </div>
+            )}
+          </div>
         </section>
 
         <aside className="space-y-4">
           <section className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Contenu du pack", "محتوى الباك")}</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">{t("Resume du pack", "ملخص الباك")}</p>
             <div className="mt-3 space-y-2">
-              {includedPerfumes.length === 0 ? (
-                <p className="text-sm text-stone-600 dark:text-stone-300">{t("Contenu detaille indisponible pour le moment.", "تفاصيل المحتوى غير متاحة حالياً.")}</p>
+              {filledCount === 0 ? (
+                <p className="text-sm text-stone-500 dark:text-stone-400">
+                  {t("Aucun parfum selectionne.", "لم يتم اختيار أي عطر.")}
+                </p>
               ) : (
-                includedPerfumes.map((perfume) => (
-                  <Link key={perfume.slug} to={`/perfume/${perfume.slug}`} className="block rounded-xl border border-stone-200 p-2 text-sm hover:border-amber-300 dark:border-stone-700">
+                selectedPerfumes.filter((p): p is Perfume => p !== null).map((perfume) => (
+                  <div key={perfume.slug} className="rounded-xl border border-stone-200 p-2.5 text-sm dark:border-stone-700">
                     <p className="font-semibold text-stone-900 dark:text-stone-100">{perfume.name}</p>
                     <p className="text-xs text-stone-600 dark:text-stone-300">{localizePerfumeText(perfume.brand, isArabic)}</p>
-                  </Link>
+                  </div>
                 ))
               )}
             </div>
@@ -900,14 +1192,28 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
               <button
                 type="button"
                 onClick={handleAddPackToCart}
-                className="rounded-xl border border-stone-900 p-3 text-sm font-medium text-stone-900 hover:bg-stone-100 dark:border-stone-300 dark:text-stone-100 dark:hover:bg-stone-800"
+                disabled={!isComplete}
+                className={`rounded-xl p-3 text-sm font-medium transition ${
+                  isComplete
+                    ? "border border-stone-900 text-stone-900 hover:bg-stone-100 dark:border-stone-300 dark:text-stone-100 dark:hover:bg-stone-800"
+                    : "border border-stone-200 bg-stone-100 text-stone-400 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-500"
+                }`}
               >
                 {t("Ajouter au panier", "أضف إلى السلة")}
               </button>
               <button
                 type="button"
-                onClick={handleBuyNow}
-                className="rounded-xl bg-stone-900 p-3 text-sm font-medium text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300"
+                onClick={() => {
+                  if (isComplete) {
+                    handleAddPackToCart();
+                  }
+                }}
+                disabled={!isComplete}
+                className={`rounded-xl p-3 text-sm font-medium transition ${
+                  isComplete
+                    ? "bg-stone-900 text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300"
+                    : "bg-stone-200 text-stone-400 dark:bg-stone-700 dark:text-stone-500"
+                }`}
               >
                 {t("Acheter maintenant", "اشترِ الآن")}
               </button>
