@@ -1578,7 +1578,6 @@ function AdminLogin({ onLogin }: { onLogin: (form: AdminLoginForm) => Promise<vo
           {message && <p className="text-sm text-rose-700">{message}</p>}
         </form>
 
- */}
         <Link to="/" className="mt-4 inline-flex text-sm text-amber-700 hover:underline dark:text-amber-300">Retour au catalogue</Link>
       </div>
     </div>
