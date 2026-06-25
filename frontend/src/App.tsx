@@ -2326,15 +2326,27 @@ function App() {
 
     return window.navigator.language.startsWith("ar") ? "ar" : "fr";
   });
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const saved = window.localStorage.getItem("arslan-cart");
+      return saved ? (JSON.parse(saved) as CartItem[]) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [hideEmptyCartPrompt, setHideEmptyCartPrompt] = useState(false);
 
+  // AFTER the cartItems useState
   useEffect(() => {
-    window.localStorage.setItem(languageStorageKey, language);
-    document.documentElement.lang = language;
-    document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
-  }, [language]);
+    window.localStorage.setItem("arslan-cart", JSON.stringify(cartItems));
+  }, [cartItems]);
+
+  // useEffect(() => {
+  //   window.localStorage.setItem(languageStorageKey, language);
+  //   document.documentElement.lang = language;
+  //   document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+  // }, [language]);
 
   useEffect(() => {
     document.documentElement.classList.remove("dark");
