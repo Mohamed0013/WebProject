@@ -943,6 +943,15 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
   const [selectedPerfumes, setSelectedPerfumes] = useState<(Perfume | null)[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentSlotIndex, setCurrentSlotIndex] = useState(0);
+  const [orderForm, setOrderForm] = useState({
+    customer_name: "",
+    customer_address: "",
+    customer_phone: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [orderMessage, setOrderMessage] = useState("");
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const navigate = useNavigate();
 
   const pack = useMemo(() => packShowcaseItems.find((item) => item.id === packId) ?? null, [packId]);
 
@@ -961,7 +970,6 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
   setSelectedPerfumes(slots);
   window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
 
-  // Auto-open the selector for the first empty slot
   if (preselectedPerfume && selectionCount > 1) {
     setCurrentSlotIndex(1);
     setModalOpen(true);
@@ -995,10 +1003,8 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
     const next = [...prev];
     next[currentSlotIndex] = perfume;
 
-    // Auto-advance to next empty slot
     const nextEmptyIndex = next.findIndex((p, i) => i > currentSlotIndex && p === null);
     if (nextEmptyIndex !== -1) {
-      // Small delay so modal closes cleanly before reopening
       setTimeout(() => {
         setCurrentSlotIndex(nextEmptyIndex);
         setModalOpen(true);
@@ -1006,8 +1012,8 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
     }
 
     return next;
-  });
-};
+    });
+  };
 
   const handleRemovePerfume = (slotIndex: number) => {
     setSelectedPerfumes((prev) => {
@@ -1196,61 +1202,143 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
             </div>
           </section>
 
-          <section className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-6">
-            <p className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("Option selectionnee", "العرض المختار")}</p>
-            <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">{t(purchaseOptionLabels[pack.purchaseOption].fr, purchaseOptionLabels[pack.purchaseOption].ar)}</p>
+          // AFTER
+        <section className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-6">
+          <p className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("Option selectionnee", "العرض المختار")}</p>
+          <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">{t(purchaseOptionLabels[pack.purchaseOption].fr, purchaseOptionLabels[pack.purchaseOption].ar)}</p>
 
-            <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-              {t("Prix unitaire:", "سعر الوحدة:")} <span className="font-semibold"><Currency amount={unitPrice} /></span>
-            </div>
-            <div className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-              {t("Total:", "المجموع:")} <span className="font-semibold"><Currency amount={total} /></span>
-            </div>
+          <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+            {t("Prix unitaire:", "سعر الوحدة:")} <span className="font-semibold"><Currency amount={unitPrice} /></span>
+          </div>
+          <div className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+            {t("Total:", "المجموع:")} <span className="font-semibold"><Currency amount={total} /></span>
+          </div>
 
-            <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-stone-600 dark:text-stone-300">{t("Quantite", "الكمية")}</label>
+          <div className="mt-3">
+            <label className="mb-1 block text-xs font-semibold text-stone-600 dark:text-stone-300">{t("Quantite", "الكمية")}</label>
+            <input
+              className="w-full rounded-xl border border-stone-300 p-2.5 text-sm dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+              type="number"
+              min={1}
+              value={quantity}
+              onChange={(event) => setQuantity(Number(event.target.value) || 1)}
+            />
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleAddPackToCart}
+              disabled={!isComplete}
+              className={`rounded-xl p-3 text-sm font-medium transition ${
+                isComplete
+                  ? "border border-stone-900 text-stone-900 hover:bg-stone-100 dark:border-stone-300 dark:text-stone-100 dark:hover:bg-stone-800"
+                  : "border border-stone-200 bg-stone-100 text-stone-400 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-500"
+              }`}
+            >
+              {t("Ajouter au panier", "أضف إلى السلة")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (isComplete) {
+                  handleAddPackToCart();
+                  setTimeout(() => nameInputRef.current?.focus(), 100);
+                }
+              }}
+              disabled={!isComplete}
+              className={`rounded-xl p-3 text-sm font-medium transition ${
+                isComplete
+                  ? "bg-stone-900 text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300"
+                  : "bg-stone-200 text-stone-400 dark:bg-stone-700 dark:text-stone-500"
+              }`}
+            >
+              {t("Acheter maintenant", "اشترِ الآن")}
+            </button>
+          </div>
+
+          {message && <p className="mt-3 text-sm text-stone-700 dark:text-stone-300">{message}</p>}
+
+          <div className="mt-6 border-t border-stone-200 pt-5 dark:border-stone-700">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-300">
+              {t("Informations de livraison", "معلومات التوصيل")}
+            </p>
+            <form
+              className="space-y-3"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                if (!isComplete || !pack) return;
+
+                setSubmitting(true);
+                setOrderMessage("");
+
+                const selected = selectedPerfumes.filter((p): p is Perfume => p !== null);
+
+                try {
+                  const response = await api.post<{ message: string }>("/orders", {
+                    perfume_id: selected[0]?.id ?? 0,
+                    customer_name: orderForm.customer_name,
+                    customer_address: orderForm.customer_address,
+                    customer_phone: orderForm.customer_phone,
+                    quantity,
+                    purchase_option: pack.purchaseOption,
+                    pack_id: pack.id,
+                    selected_perfume_ids: selected.map((p) => p.id),
+                  });
+
+                  navigate("/", {
+                    replace: true,
+                    state: { successMessage: response.data.message ?? t("Commande confirmee !", "تم تأكيد الطلب!") },
+                  });
+                } catch {
+                  setOrderMessage(t("Echec de la commande. Veuillez reessayer.", "فشل الطلب. يرجى المحاولة مرة أخرى."));
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
+            >
               <input
-                className="w-full rounded-xl border border-stone-300 p-2.5 text-sm dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
-                type="number"
-                min={1}
-                value={quantity}
-                onChange={(event) => setQuantity(Number(event.target.value) || 1)}
+                ref={nameInputRef}
+                className="w-full rounded-xl border border-stone-300 p-3 text-sm dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+                placeholder={t("Votre nom", "اسمك")}
+                value={orderForm.customer_name}
+                onChange={(e) => setOrderForm((f) => ({ ...f, customer_name: e.target.value }))}
               />
-            </div>
+              <textarea
+                className="min-h-24 w-full rounded-xl border border-stone-300 p-3 text-sm dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+                placeholder={t("Votre adresse", "عنوانك")}
+                value={orderForm.customer_address}
+                onChange={(e) => setOrderForm((f) => ({ ...f, customer_address: e.target.value }))}
+              />
+              <input
+                className="w-full rounded-xl border border-stone-300 p-3 text-sm dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+                placeholder={t("Numero de telephone", "رقم الهاتف")}
+                value={orderForm.customer_phone}
+                onChange={(e) => setOrderForm((f) => ({ ...f, customer_phone: e.target.value }))}
+              />
 
-            <div className="mt-4 grid grid-cols-2 gap-2">
               <button
-                type="button"
-                onClick={handleAddPackToCart}
-                disabled={!isComplete}
-                className={`rounded-xl p-3 text-sm font-medium transition ${
+                type="submit"
+                disabled={submitting || !isComplete}
+                className={`w-full rounded-xl p-3 text-sm font-semibold text-white transition ${
                   isComplete
-                    ? "border border-stone-900 text-stone-900 hover:bg-stone-100 dark:border-stone-300 dark:text-stone-100 dark:hover:bg-stone-800"
-                    : "border border-stone-200 bg-stone-100 text-stone-400 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-500"
-                }`}
+                    ? "bg-emerald-700 hover:bg-emerald-800"
+                    : "bg-stone-300 text-stone-500 dark:bg-stone-700 dark:text-stone-500"
+                } disabled:opacity-70`}
               >
-                {t("Ajouter au panier", "أضف إلى السلة")}
+                {!isComplete
+                  ? t("Completez votre pack d'abord", "أكمل اختيار العطور أولاً")
+                  : submitting
+                  ? t("Validation...", "جارٍ التأكيد...")
+                  : t("Confirmer la commande", "تأكيد الطلب")}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (isComplete) {
-                    handleAddPackToCart();
-                  }
-                }}
-                disabled={!isComplete}
-                className={`rounded-xl p-3 text-sm font-medium transition ${
-                  isComplete
-                    ? "bg-stone-900 text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300"
-                    : "bg-stone-200 text-stone-400 dark:bg-stone-700 dark:text-stone-500"
-                }`}
-              >
-                {t("Acheter maintenant", "اشترِ الآن")}
-              </button>
-            </div>
 
-            {message && <p className="mt-3 text-sm text-stone-700 dark:text-stone-300">{message}</p>}
-          </section>
+              {orderMessage && (
+                <p className="text-sm text-rose-700 dark:text-rose-300">{orderMessage}</p>
+              )}
+            </form>
+          </div>
+        </section>
         </aside>
       </div>
     </div>
