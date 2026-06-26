@@ -46,7 +46,8 @@ const languageStorageKey = "perfume-language";
 
 type Language = "fr" | "ar";
 
-type PurchaseOption = "pack_30ml_x4" | "single_50ml" | "pack_50ml_x3";
+// AFTER
+type PurchaseOption = "pack_30ml_x4" | "single_50ml" | "pack_50ml_x3" | "same_30ml_x4" | "same_50ml_x3";
 
 type PackSelectedPerfume = {
   perfume: Perfume;
@@ -67,9 +68,11 @@ type CartItem = {
 };
 
 const purchaseOptionLabels: Record<PurchaseOption, { fr: string; ar: string }> = {
-  pack_30ml_x4: { fr: "Pack 30ml x4 (149 DH)", ar: "باك 30 مل × 4 (149 درهم)" },
-  single_50ml: { fr: "50ml (1 bouteille) 79 DH", ar: "50 مل (زجاجة واحدة) 79 درهم" },
-  pack_50ml_x3: { fr: "Pack 50ml x3 (179 DH)", ar: "باك 50 مل × 3 (179 درهم)" },
+  pack_30ml_x4: { fr: "Pack 30ml x4 — choix libre (149 DH)", ar: "باك 30مل × 4 — اختيار حر (149 درهم)" },
+  single_50ml: { fr: "50ml — 1 bouteille (79 DH)", ar: "50 مل — زجاجة واحدة (79 درهم)" },
+  pack_50ml_x3: { fr: "Pack 50ml x3 — choix libre (179 DH)", ar: "باك 50مل × 3 — اختيار حر (179 درهم)" },
+  same_30ml_x4: { fr: "Pack 30ml x4 — meme parfum (149 DH)", ar: "باك 30مل × 4 — نفس العطر (149 درهم)" },
+  same_50ml_x3: { fr: "Pack 50ml x3 — meme parfum (179 DH)", ar: "باك 50مل × 3 — نفس العطر (179 درهم)" },
 };
 
 const ingredientArabicMap: Record<string, string> = {
@@ -1730,6 +1733,8 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
       pack_30ml_x4: 149,
       single_50ml: 79,
       pack_50ml_x3: 179,
+      same_30ml_x4: 149,
+      same_50ml_x3: 179,
     };
 
     return prices[form.purchase_option];
@@ -1737,6 +1742,7 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
 
   const total = useMemo(() => unitPrice * form.quantity, [unitPrice, form.quantity]);
 
+  // AFTER
   const packIdFromOption = useMemo(() => {
     if (form.purchase_option === "pack_30ml_x4") {
       return "pack-30ml-quad";
@@ -1745,6 +1751,7 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
       return "pack-50ml-trio";
     }
     return null;
+    // same_30ml_x4 and same_50ml_x3 stay on this page — no redirect
   }, [form.purchase_option]);
 
   const handleAddToCart = () => {
@@ -1823,12 +1830,18 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
     setMessage("");
 
     try {
+      // AFTER
+      const effectiveQuantity =
+        form.purchase_option === "same_30ml_x4" ? form.quantity * 4 :
+        form.purchase_option === "same_50ml_x3" ? form.quantity * 3 :
+        form.quantity;
+
       const response = await api.post<OrderResponse>("/orders", {
         perfume_id: perfume.id,
         customer_name: form.customer_name,
         customer_address: form.customer_address,
         customer_phone: form.customer_phone,
-        quantity: form.quantity,
+        quantity: effectiveQuantity,
         purchase_option: form.purchase_option,
       });
 
@@ -2213,9 +2226,11 @@ function Legend() {
     <div className="mt-3 rounded-xl border border-stone-200 bg-stone-50 p-3 text-xs text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
       <p className="font-semibold">{t("Legende:", "الوسيلة:" )}</p>
       <ul className="mt-1 list-inside list-disc space-y-0.5">
-        <li>{t("50ml: Bouteille individuelle de 50ml", "50 مل: زجاجة فردية 50 مل")}</li>
-        <li>{t("Pack 30ml x4: 4 bouteilles de 30ml", "باك 30 مل × 4: 4 زجاجات 30 مل")}</li>
-        <li>{t("Pack 50ml x3: 3 bouteilles de 50ml", "باك 50 مل × 3: 3 زجاجات 50 مل")}</li>
+        <li>{t("50ml: 1 bouteille de 50ml", "50 مل: زجاجة واحدة 50 مل")}</li>
+        <li>{t("Pack 30ml x4 choix libre: 4 parfums differents au choix (149 DH)", "باك 30مل × 4 اختيار حر: 4 عطور مختلفة حسب اختيارك (149 درهم)")}</li>
+        <li>{t("Pack 50ml x3 choix libre: 3 parfums differents au choix (179 DH)", "باك 50مل × 3 اختيار حر: 3 عطور مختلفة حسب اختيارك (179 درهم)")}</li>
+        <li>{t("Pack 30ml x4 meme parfum: 4 bouteilles du meme parfum (149 DH)", "باك 30مل × 4 نفس العطر: 4 زجاجات من نفس العطر (149 درهم)")}</li>
+        <li>{t("Pack 50ml x3 meme parfum: 3 bouteilles du meme parfum (179 DH)", "باك 50مل × 3 نفس العطر: 3 زجاجات من نفس العطر (179 درهم)")}</li>
       </ul>
     </div>
   );
