@@ -492,7 +492,7 @@ let nextOrderId = 1;
 export const mockAdminUser: User = {
   id: 1,
   name: "Admin",
-  email: "admin@example.com",
+  email: "mohdahma13@gmail.com",
   role: "admin"
 };
 
@@ -553,7 +553,7 @@ export const mockApi = {
   login: async (email: string, password: string): Promise<{ access_token: string; user: User }> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    if (email === "admin@example.com" && password === "Admin123456") {
+    if (email === "mohdahma13@gmail.com" && password === "Simoox029@##") {
       return {
         access_token: "mock-token-" + Date.now(),
         user: mockAdminUser

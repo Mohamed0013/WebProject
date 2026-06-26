@@ -25,7 +25,7 @@ return new class extends Migration
         }
 
         DB::table('users')
-            ->where('email', 'admin@example.com')
+            ->where('email', 'mohdahma13@gmail.com')
             ->update(['role' => 'admin']);
     }
 

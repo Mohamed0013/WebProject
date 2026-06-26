@@ -74,13 +74,13 @@ class AuthApiTest extends TestCase
     public function test_login_rejects_invalid_credentials(): void
     {
         User::factory()->create([
-            'email' => 'admin@example.com',
+            'email' => 'mohdahma13@gmail.com',
             'password' => 'password123',
             'role' => 'admin',
         ]);
 
         $this->postJson('/api/login', [
-            'email' => 'admin@example.com',
+            'email' => 'mohdahma13@gmail.com',
             'password' => 'wrong-password',
         ])
             ->assertUnprocessable()
