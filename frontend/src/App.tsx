@@ -911,7 +911,6 @@ function StorefrontPage({ mode, cartItems, isCartOpen, setIsCartOpen, hideEmptyC
                   <div className="aspect-[4/3] overflow-hidden bg-stone-200 dark:bg-stone-800">
                     <img src={pack.image} alt={t(pack.titleFr, pack.titleAr)} className="h-full w-full object-cover" />
                   </div>
-                  // AFTER
                   <div className="space-y-2 p-3">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${
@@ -1364,7 +1363,6 @@ function PackOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => void 
             </div>
           </section>
 
-          // AFTER
         <section className="rounded-3xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:p-6">
           <p className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("Option selectionnee", "العرض المختار")}</p>
           <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">{t(purchaseOptionLabels[pack.purchaseOption].fr, purchaseOptionLabels[pack.purchaseOption].ar)}</p>
@@ -1742,7 +1740,6 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
 
   const total = useMemo(() => unitPrice * form.quantity, [unitPrice, form.quantity]);
 
-  // AFTER
   const packIdFromOption = useMemo(() => {
     if (form.purchase_option === "pack_30ml_x4") {
       return "pack-30ml-quad";
@@ -1830,7 +1827,6 @@ function PerfumeOrderPage({ onAddToCart }: { onAddToCart: (item: CartItem) => vo
     setMessage("");
 
     try {
-      // AFTER
       const effectiveQuantity =
         form.purchase_option === "same_30ml_x4" ? form.quantity * 4 :
         form.purchase_option === "same_50ml_x3" ? form.quantity * 3 :
